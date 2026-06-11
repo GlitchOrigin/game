@@ -157,11 +157,18 @@
 
         .nav-bar {
             position: fixed; bottom: 25px; left: 0; width: 100%;
-            display: flex; justify-content: center; gap: clamp(10px, 4vw, 20px); z-index: 100;
+            display: flex; justify-content: center; gap: clamp(8px, 2vw, 15px); z-index: 100;
+            padding: 0 10px;
         }
         .nav-item {
-            font-family: var(--main-font); font-size: clamp(0.7rem, 3vw, 0.9rem);
+            font-family: var(--main-font); font-size: clamp(0.6rem, 2.5vw, 0.8rem);
             color: white; text-transform: uppercase; cursor: pointer; position: relative;
+            padding: 5px;
+            white-space: nowrap;
+        }
+        .nav-item:hover {
+            color: var(--glitch-color);
+            text-shadow: 0 0 5px var(--glitch-color);
         }
 
         .data-block { position: absolute; background: var(--glitch-color); width: 40px; height: 10px; opacity: 0.6; pointer-events: none; z-index: 2; }
@@ -193,23 +200,6 @@
     </style>
 </head>
 <body class="crt">
-    
-    <button id="ad">Show ad</button>
-        <script>
-            /// Вставьте ваш blockId
-            const AdController = window.Adsgram.init({ blockId: "34799" });
-            const button = document.getElementById('ad');
-            button.addEventListener('click', () => {
-                AdController.show().then((result) => {
-                    // Пользователь просмотрел рекламу до конца или пропустил её в Interstitial формате
-                    // Ваш код для награждения пользователя
-                    alert('Reward');
-                }).catch((result) => {
-                    // Ошибка при воспроизведении рекламы
-                    alert(JSON.stringify(result, null, 4));
-                })
-            })
-        </script>
 
 <div class="noise-bg"></div>
 <div class="hit-overlay" id="flash"></div>
@@ -243,6 +233,7 @@
     <div class="nav-item" id="nav-quests" data-text="QUESTS">QUESTS</div>
     <div class="nav-item" id="nav-shop" data-text="SHOP">SHOP</div>
     <div class="nav-item" id="nav-rank" data-text="RANK">RANK</div>
+    <div class="nav-item" id="nav-ads" data-text="ADS">ADS</div>
 </nav>
 
 <script>
@@ -259,6 +250,9 @@
     tg.setHeaderColor('#000000');
     tg.setBackgroundColor('#000000');
 
+    // Initialize Adsgram
+    const AdController = window.Adsgram.init({ blockId: "34799" });
+
     let score = 0;
     let combo = 0;
     let comboTimer;
@@ -270,14 +264,14 @@
         en: {
             title: "SYSTEM DESTRUCTION", btn: "DO NOT TOUCH", score: "CHAOS: ",
             settings: "SETTINGS", close: "CLOSE",
-            play: "PLAY", quests: "QUESTS", shop: "SHOP", rank: "RANK",
+            play: "PLAY", quests: "QUESTS", shop: "SHOP", rank: "RANK", ads: "ADS",
             trash: ["TRASH DETECTED", "KERNEL PANIC", "CPU MELTING", "DATA LEAK", "GET OUT", "FATAL ERR"],
             glitch: "DANGER!!!", erasing: "WIPING DATA..."
         },
         ru: {
             title: "РАЗРУШЕНИЕ СИСТЕМЫ", btn: "НЕ ТРОГАЙ", score: "ХАОС: ",
             settings: "НАСТРОЙКИ", close: "ЗАКРЬIТЬ",
-            play: "ИГРАТЬ", quests: "КВЕСТЫ", shop: "МАГАЗИН", rank: "РЕЙТИНГ",
+            play: "ИГРАТЬ", quests: "КВЕСТЫ", shop: "МАГАЗИН", rank: "РЕЙТИНГ", ads: "РЕКЛАМА",
             trash: ["МУСОР ОБНАРУЖЕН", "ПАНИКА ЯДРА", "ПЛАВЛЕНИЕ ПРОЦЕССОРА", "УТЕЧКА ДАННЫХ", "ВЫХОДИ", "ОШИБКА"],
             glitch: "ОПАСНО!!!", erasing: "УДАЛЕНИЕ..."
         }
@@ -319,12 +313,17 @@
         }
         if (!isPunishing) scoreEl.innerText = t.score + score;
         
-        document.getElementById("settings-title").innerText = t.settings;
         document.getElementById("close-btn").innerText = t.close;
-        ["nav-play", "nav-quests", "nav-shop", "nav-rank"].forEach(id => {
+        document.getElementById("settings-title").innerText = t.settings;
+        
+        ["nav-play", "nav-quests", "nav-shop", "nav-rank", "nav-ads"].forEach(id => {
             const el = document.getElementById(id);
-            const text = t[id.split('-')[1]];
-            el.innerText = text; el.setAttribute('data-text', text);
+            if (el) {
+                const key = id.split('-')[1];
+                const text = t[key];
+                el.innerText = text; 
+                el.setAttribute('data-text', text);
+            }
         });
     }
 
@@ -455,6 +454,22 @@
     };
 
     btn.addEventListener('pointerdown', triggerAction);
+
+    // Ads logic
+    const adsBtn = document.getElementById('nav-ads');
+    adsBtn.addEventListener('click', () => {
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        AdController.show().then((result) => {
+            // Reward user
+            score += 1000;
+            updateUI();
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            alert('REWARD: +1000 CHAOS');
+        }).catch((result) => {
+            console.error('Ads error:', result);
+            alert('Ads error: ' + (result.error || 'Unknown error'));
+        });
+    });
     
     // Initial UI update
     updateUI();
