@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GLITCH WORLD - INSANE EDITION</title>
+    <title>GLITCH WORLD - TELEGRAM EDITION</title>
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=JetBrains+Mono:wght@800&display=swap');
 
         :root {
             --glitch-color: #00ff00;
             --accent-color: #ff003c;
-            --bg-color: #020202;
+            /* Telegram Pure Black Theme */
+            --bg-color: #000000;
             --main-font: 'Russo One', sans-serif;
             --mono-font: 'JetBrains Mono', monospace;
         }
@@ -36,14 +39,14 @@
         /* CRT Scanlines */
         .crt::before {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.06));
             z-index: 1000; background-size: 100% 3px, 3px 100%; pointer-events: none;
         }
 
         .noise-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url('https://media.giphy.com/media/oEI9uWUznW3D2/giphy.gif');
-            opacity: 0.08; pointer-events: none; z-index: 1;
+            opacity: 0.05; pointer-events: none; z-index: 1;
         }
 
         #settings-icon {
@@ -80,6 +83,7 @@
         h1 {
             font-size: clamp(1.2rem, 8vw, 2.5rem); text-transform: uppercase;
             animation: text-vibrate 0.1s infinite; margin-bottom: 0.5rem;
+            text-align: center;
         }
         @keyframes text-vibrate {
             0% { transform: translate(0); text-shadow: 2px 2px var(--accent-color), -2px -2px var(--glitch-color); }
@@ -223,6 +227,15 @@
 </nav>
 
 <script>
+    // Initialize Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.enableClosingConfirmation();
+    
+    // Set pure black theme for Telegram
+    tg.setHeaderColor('#000000');
+    tg.setBackgroundColor('#000000');
+
     let score = 0;
     let combo = 0;
     let comboTimer;
@@ -240,7 +253,7 @@
         },
         ru: {
             title: "РАЗРУШЕНИЕ СИСТЕМЫ", btn: "НЕ ТРОГАЙ", score: "ХАОС: ",
-            settings: "НАСТРОЙКИ", close: "ЗАКРЫТЬ",
+            settings: "НАСТРОЙКИ", close: "ЗАКРЬIТЬ",
             play: "ИГРАТЬ", quests: "КВЕСТЫ", shop: "МАГАЗИН", rank: "РЕЙТИНГ",
             trash: ["МУСОР ОБНАРУЖЕН", "ПАНИКА ЯДРА", "ПЛАВЛЕНИЕ ПРОЦЕССОРА", "УТЕЧКА ДАННЫХ", "ВЫХОДИ", "ОШИБКА"],
             glitch: "ОПАСНО!!!", erasing: "УДАЛЕНИЕ..."
@@ -255,8 +268,16 @@
     const settingsMenu = document.getElementById("settings-menu");
     const pixelOverlay = document.getElementById("pixels");
 
-    function toggleSettings() { settingsMenu.classList.toggle("open"); }
-    function setLang(lang) { currentLang = lang; updateUI(); toggleSettings(); }
+    function toggleSettings() { 
+        settingsMenu.classList.toggle("open");
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    }
+    
+    function setLang(lang) { 
+        currentLang = lang; 
+        updateUI(); 
+        toggleSettings(); 
+    }
 
     function updateUI() {
         const t = translations[currentLang];
@@ -305,6 +326,7 @@
         isGlitchActive = true;
         btn.classList.add("glitch-active");
         btn.innerText = translations[currentLang].glitch;
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
     }
 
     function deactivateGlitch() {
@@ -317,6 +339,8 @@
         if (isPunishing) return;
         isPunishing = true;
         isGlitchActive = false;
+
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
 
         // Эффект стирания баланса
         scoreEl.classList.add("erasing");
@@ -368,6 +392,8 @@
             return;
         }
 
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
         combo++;
         score += combo;
         scoreEl.innerText = translations[currentLang].score + score;
@@ -397,8 +423,13 @@
     };
 
     btn.addEventListener('pointerdown', triggerAction);
+    
+    // Initial UI update
     updateUI();
     startGlitchCycle();
+    
+    // Let Telegram know we are ready
+    tg.ready();
 </script>
 
 </body>
