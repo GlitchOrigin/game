@@ -14,7 +14,6 @@
         :root {
             --glitch-color: #00ff00;
             --accent-color: #ff003c;
-            /* Telegram Pure Black Theme */
             --bg-color: #000000;
             --main-font: 'Russo One', sans-serif;
             --mono-font: 'JetBrains Mono', monospace;
@@ -35,10 +34,8 @@
             align-items: center; justify-content: center;
             min-height: 100vh; overflow: hidden;
             user-select: none; -webkit-user-select: none;
-            transition: transform 0.1s;
         }
 
-        /* CRT Scanlines */
         .crt::before {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.06));
@@ -65,22 +62,15 @@
             clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%);
             box-shadow: 10px 10px 0 var(--glitch-color), -10px -10px 0 var(--accent-color);
         }
-        #settings-menu.open { transform: translate(-50%, -50%) scale(1); animation: menu-glitch 0.3s infinite; }
-        
-        @keyframes menu-glitch {
-            0% { clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%); }
-            50% { clip-path: polygon(5% 0, 95% 5%, 100% 100%, 0 90%); }
-            100% { clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%); }
-        }
+        #settings-menu.open { transform: translate(-50%, -50%) scale(1); }
 
         .lang-btn {
             background: transparent; color: white; border: 2px solid white;
             padding: 15px; font-family: var(--main-font); margin: 10px 0;
-            cursor: pointer; font-weight: 900; width: 100%; transition: 0.1s;
+            cursor: pointer; font-weight: 900; width: 100%;
         }
-        .lang-btn:hover { background: var(--accent-color); border-color: var(--glitch-color); transform: skew(-5deg); box-shadow: 5px 5px 0 var(--glitch-color); }
 
-        .main-content { display: flex; flex-direction: column; align-items: center; z-index: 5; margin-top: -5vh; transition: filter 0.1s; }
+        .main-content { display: flex; flex-direction: column; align-items: center; z-index: 5; }
 
         h1 {
             font-size: clamp(1.2rem, 8vw, 2.5rem); text-transform: uppercase;
@@ -106,25 +96,19 @@
         }
         
         #btn.glitch-active {
-            background: #fff !important;
-            color: #000 !important;
+            background: #fff !important; color: #000 !important;
             animation: btn-glitch-warning 0.05s infinite !important;
-            box-shadow: 0 0 50px #fff, 0 0 20px var(--accent-color);
         }
 
         @keyframes btn-glitch-warning {
-            0% { transform: translate(5px, 0) skew(10deg); filter: contrast(200%) invert(0); }
-            20% { transform: translate(-5px, 2px) skew(-10deg); filter: contrast(150%) invert(1); }
-            40% { transform: translate(2px, -5px) scale(1.1); }
-            60% { transform: translate(-2px, 5px) rotate(2deg); }
-            80% { transform: translate(0, 0) scale(0.9); }
+            0% { transform: translate(5px, 0) skew(10deg); }
+            50% { transform: translate(-5px, 2px) skew(-10deg); filter: invert(1); }
             100% { transform: translate(5px, 0); }
         }
 
         @keyframes btn-insane {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); background: var(--glitch-color); color: black; clip-path: polygon(0 0, 100% 15%, 100% 100%, 0 85%); }
-            100% { transform: scale(1); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); background: var(--glitch-color); color: black; }
         }
 
         #score-container { 
@@ -135,25 +119,15 @@
             font-size: clamp(1.2rem, 6vw, 2rem); font-family: var(--mono-font);
             color: var(--glitch-color); text-shadow: 0 0 10px var(--glitch-color);
             background: black; padding: 10px 20px; border: 2px solid white;
-            z-index: 10; position: relative; overflow: hidden;
+            z-index: 10;
         }
-        #score.erasing {
-            animation: score-shake 0.1s infinite;
-            color: #ff0000;
-            border-color: #ff0000;
-        }
-        @keyframes score-shake {
-            0% { transform: translate(2px, 2px); }
-            50% { transform: translate(-2px, -2px); }
-            100% { transform: translate(0, 0); }
-        }
+        #score.erasing { animation: score-shake 0.1s infinite; color: #ff0000; border-color: #ff0000; }
+        @keyframes score-shake { 0% { transform: translate(2px, 2px); } 100% { transform: translate(-2px, -2px); } }
 
         #combo {
             font-size: 1.2rem; color: var(--accent-color); font-weight: 900;
-            margin-top: 15px;
-            opacity: 0; transition: transform 0.1s ease-out, opacity 0.2s;
-            text-shadow: 2px 2px 0 black;
-            pointer-events: none;
+            margin-top: 15px; opacity: 0; transition: 0.2s;
+            text-shadow: 2px 2px 0 black; pointer-events: none;
         }
 
         .nav-bar {
@@ -162,7 +136,7 @@
         }
         .nav-item {
             font-family: var(--main-font); font-size: clamp(0.7rem, 3vw, 0.9rem);
-            color: white; text-transform: uppercase; cursor: pointer; position: relative;
+            color: white; text-transform: uppercase; cursor: pointer;
         }
 
         .data-block { position: absolute; background: var(--glitch-color); width: 40px; height: 10px; opacity: 0.6; pointer-events: none; z-index: 2; }
@@ -170,27 +144,14 @@
         .flash { animation: flash-anim 0.1s; }
         @keyframes flash-anim { 0% { opacity: 0.6; } 100% { opacity: 0; } }
 
-        /* ИНТЕНСИВНЫЙ ГЛИТЧ ПРИ НАКАЗАНИИ */
-        .punishment-active {
-            animation: screen-chaos 0.1s infinite !important;
-            filter: hue-rotate(90deg) contrast(300%) !important;
-        }
-
-        @keyframes screen-chaos {
-            0% { transform: translate(10px, 10px) rotate(5deg) scale(1.2); clip-path: inset(10% 0 40% 0); }
-            20% { transform: translate(-10px, -20px) rotate(-5deg) scale(0.8); clip-path: inset(30% 0 20% 0); }
-            40% { transform: translate(20px, 5px) skew(20deg) scale(1.5); filter: invert(1); }
-            60% { transform: translate(-20px, 15px) rotate(180deg) scale(0.5); clip-path: inset(0 20% 0 30%); }
-            80% { transform: translate(5px, -10px) skew(-20deg) scale(1.1); filter: sepia(1); }
-            100% { transform: translate(0, 0) rotate(360deg) scale(1); }
-        }
+        .punishment-active { animation: screen-chaos 0.1s infinite !important; }
+        @keyframes screen-chaos { 0% { transform: translate(10px, 10px); } 100% { transform: translate(-10px, -10px); } }
 
         .pixel-destruction {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 3000; display: none;
             background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px);
         }
-
     </style>
 </head>
 <body class="crt">
@@ -219,38 +180,34 @@
         <div id="score">CHAOS: 0</div>
         <div id="combo">COMBO X1</div>
     </div>
-    <div id="user-display" style="margin-top: 15px; font-family: var(--mono-font); color: var(--glitch-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7;">USER: UNKNOWN</div>
+    <div id="user-display" style="margin-top: 15px; font-family: var(--mono-font); color: var(--glitch-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7;">
+        USER: <span id="user-name">LOADING...</span><br>
+        ID: <span id="user-id">---</span>
+    </div>
 </div>
 
 <nav class="nav-bar">
-    <div class="nav-item" id="nav-play" data-text="PLAY">PLAY</div>
-    <div class="nav-item" id="nav-earn" data-text="EARN" onclick="showAd()" style="color: var(--glitch-color); font-weight: bold; border: 1px solid var(--glitch-color); padding: 5px 10px;">EARN</div>
-    <div class="nav-item" id="nav-quests" data-text="QUESTS">QUESTS</div>
-    <div class="nav-item" id="nav-shop" data-text="SHOP">SHOP</div>
-    <div class="nav-item" id="nav-rank" data-text="RANK">RANK</div>
+    <div class="nav-item" id="nav-play">PLAY</div>
+    <div class="nav-item" id="nav-earn" style="color: var(--glitch-color); font-weight: bold; border: 1px solid var(--glitch-color); padding: 5px 10px;">EARN</div>
+    <div class="nav-item" id="nav-quests">QUESTS</div>
+    <div class="nav-item" id="nav-shop">SHOP</div>
+    <div class="nav-item" id="nav-rank">RANK</div>
 </nav>
 
 <script>
-    // Initialize Telegram WebApp
+    // --- 1. TELEGRAM INITIALIZATION ---
     const tg = window.Telegram.WebApp;
     tg.expand();
-    
-    // Disable vertical swipes to prevent accidental closing and keep it "expanded"
     tg.isVerticalSwipesEnabled = false;
-    
     tg.enableClosingConfirmation();
-    
-    // Set pure black theme for Telegram
     tg.setHeaderColor('#000000');
     tg.setBackgroundColor('#000000');
 
-    // Adsgram Integration
-    const AdController = window.Adsgram.init({ blockId: "8812721975" });
-
+    // --- 2. GAME STATE ---
     let score = 0;
     let combo = 0;
     let comboTimer;
-    let currentLang = 'en';
+    let currentLang = 'ru';
     let isGlitchActive = false;
     let isPunishing = false;
 
@@ -264,7 +221,7 @@
         },
         ru: {
             title: "РАЗРУШЕНИЕ СИСТЕМЫ", btn: "НЕ ТРОГАЙ", score: "ХАОС: ",
-            settings: "НАСТРОЙКИ", close: "ЗАКРЬIТЬ",
+            settings: "НАСТРОЙКИ", close: "ЗАКРЫТЬ",
             play: "ИГРАТЬ", quests: "КВЕСТЫ", shop: "МАГАЗИН", rank: "РЕЙТИНГ", earn: "EARN",
             trash: ["МУСОР ОБНАРУЖЕН", "ПАНИКА ЯДРА", "ПЛАВЛЕНИЕ ПРОЦЕССОРА", "УТЕЧКА ДАННЫХ", "ВЫХОДИ", "ОШИБКА"],
             glitch: "ОПАСНО!!!", erasing: "УДАЛЕНИЕ...", bonus: "БОНУС +1000!"
@@ -278,7 +235,10 @@
     const titleEl = document.getElementById("title");
     const settingsMenu = document.getElementById("settings-menu");
     const pixelOverlay = document.getElementById("pixels");
+    const userNameEl = document.getElementById("user-name");
+    const userIdEl = document.getElementById("user-id");
 
+    // --- 3. UI FUNCTIONS ---
     function toggleSettings() { 
         settingsMenu.classList.toggle("open");
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
@@ -293,12 +253,13 @@
     function updateUI() {
         const t = translations[currentLang];
         
-        // Display Telegram User Info
-        const user = tg.initDataUnsafe?.user;
-        const userDisplay = document.getElementById("user-display");
-        if (user) {
-            const name = user.username || user.first_name || "UNKNOWN";
-            userDisplay.innerText = "USER: " + name;
+        // Update User Info
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            userNameEl.innerText = (user.username || user.first_name || "UNKNOWN").toUpperCase();
+            userIdEl.innerText = user.id || "---";
+        } else {
+            userNameEl.innerText = "NOT IN TELEGRAM";
         }
 
         if (!isGlitchActive && !isPunishing) {
@@ -313,34 +274,11 @@
         ["nav-play", "nav-quests", "nav-shop", "nav-rank", "nav-earn"].forEach(id => {
             const el = document.getElementById(id);
             const key = id.split('-')[1];
-            const text = t[key];
-            el.innerText = text; el.setAttribute('data-text', text);
+            el.innerText = t[key];
         });
     }
 
-    function showAd() {
-        if (isPunishing) return;
-        
-        AdController.show().then((result) => {
-            // User watched the ad until the end
-            score += 1000;
-            updateUI();
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            
-            // Visual feedback
-            titleEl.innerText = translations[currentLang].bonus;
-            setTimeout(() => {
-                if (!isGlitchActive && !isPunishing) titleEl.innerText = translations[currentLang].title;
-            }, 2000);
-            
-            for(let i=0; i<20; i++) spawnDataBlock("var(--glitch-color)");
-        }).catch((result) => {
-            // Error or user closed the ad early
-            console.error("Adsgram error or skip:", result);
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-        });
-    }
-
+    // --- 4. GAME LOGIC ---
     function spawnDataBlock(color) {
         const b = document.createElement("div");
         b.className = "data-block";
@@ -349,86 +287,11 @@
         b.style.width = (Math.random() * 100 + 50) + "px";
         b.style.height = (Math.random() * 20 + 5) + "px";
         b.style.backgroundColor = color || (Math.random() > 0.5 ? "var(--glitch-color)" : "var(--accent-color)");
-        b.style.zIndex = "4000";
         document.body.appendChild(b);
         setTimeout(() => b.remove(), 150);
     }
 
-    function startGlitchCycle() {
-        if (isPunishing) return;
-        const nextGlitch = Math.random() * (5000 - 3000) + 3000;
-        setTimeout(() => {
-            if (isPunishing) return;
-            activateGlitch();
-            setTimeout(() => {
-                deactivateGlitch();
-                startGlitchCycle();
-            }, 1000);
-        }, nextGlitch);
-    }
-
-    function activateGlitch() {
-        isGlitchActive = true;
-        btn.classList.add("glitch-active");
-        btn.innerText = translations[currentLang].glitch;
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-    }
-
-    function deactivateGlitch() {
-        isGlitchActive = false;
-        btn.classList.remove("glitch-active");
-        if (!isPunishing) btn.innerText = translations[currentLang].btn;
-    }
-
-    function triggerPunishment() {
-        if (isPunishing) return;
-        isPunishing = true;
-        isGlitchActive = false;
-
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-
-        // Эффект стирания баланса
-        scoreEl.classList.add("erasing");
-        let tempScore = score;
-        const eraseInterval = setInterval(() => {
-            tempScore = Math.floor(tempScore * 0.7);
-            if (tempScore <= 0) {
-                tempScore = 0;
-                clearInterval(eraseInterval);
-            }
-            scoreEl.innerText = translations[currentLang].erasing + " " + generateGlitchString(tempScore);
-        }, 50);
-
-        function generateGlitchString(val) {
-            const chars = "!@#$%^&*()_+-=[]{}|;':,.<>?/";
-            let s = val.toString();
-            return s.split('').map(c => Math.random() > 0.5 ? chars[Math.floor(Math.random() * chars.length)] : c).join('');
-        }
-
-        // Визуальный хаос
-        document.body.classList.add("punishment-active");
-        pixelOverlay.style.display = "block";
-        
-        const chaosInterval = setInterval(() => {
-            spawnDataBlock("#ff0000");
-            spawnDataBlock("#ffffff");
-            spawnDataBlock("#0000ff");
-        }, 30);
-
-        setTimeout(() => {
-            clearInterval(chaosInterval);
-            isPunishing = false;
-            score = 0;
-            combo = 0;
-            document.body.classList.remove("punishment-active");
-            scoreEl.classList.remove("erasing");
-            pixelOverlay.style.display = "none";
-            updateUI();
-            startGlitchCycle();
-        }, 2000);
-    }
-
-    const triggerAction = (e) => {
+    function triggerAction(e) {
         if (e && e.cancelable) e.preventDefault();
         if (isPunishing) return;
         
@@ -445,9 +308,7 @@
         
         comboEl.style.opacity = "1";
         comboEl.innerText = "COMBO X" + combo;
-        
-        const scale = Math.min(1 + combo/20, 1.8);
-        comboEl.style.transform = `scale(${scale})`;
+        comboEl.style.transform = `scale(${Math.min(1 + combo/20, 1.8)})`;
         
         clearTimeout(comboTimer);
         comboTimer = setTimeout(() => { combo = 0; comboEl.style.opacity = "0"; }, 800);
@@ -458,22 +319,96 @@
 
         for(let i=0; i<5; i++) spawnDataBlock();
 
-        if(Math.random() > 0.7) {
+        if(Math.random() > 0.8) {
             const trash = translations[currentLang].trash;
             titleEl.innerText = trash[Math.floor(Math.random() * trash.length)];
             setTimeout(() => {
                 if (!isGlitchActive && !isPunishing) titleEl.innerText = translations[currentLang].title;
             }, 350);
         }
-    };
+    }
 
+    function triggerPunishment() {
+        if (isPunishing) return;
+        isPunishing = true;
+        isGlitchActive = false;
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+
+        scoreEl.classList.add("erasing");
+        let tempScore = score;
+        const eraseInterval = setInterval(() => {
+            tempScore = Math.floor(tempScore * 0.7);
+            if (tempScore <= 0) { tempScore = 0; clearInterval(eraseInterval); }
+            scoreEl.innerText = translations[currentLang].erasing + " " + tempScore;
+        }, 50);
+
+        document.body.classList.add("punishment-active");
+        pixelOverlay.style.display = "block";
+        
+        setTimeout(() => {
+            isPunishing = false;
+            score = 0; combo = 0;
+            document.body.classList.remove("punishment-active");
+            scoreEl.classList.remove("erasing");
+            pixelOverlay.style.display = "none";
+            updateUI();
+        }, 2000);
+    }
+
+    function startGlitchCycle() {
+        if (isPunishing) return;
+        setTimeout(() => {
+            if (isPunishing) return;
+            isGlitchActive = true;
+            btn.classList.add("glitch-active");
+            btn.innerText = translations[currentLang].glitch;
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+
+            setTimeout(() => {
+                isGlitchActive = false;
+                btn.classList.remove("glitch-active");
+                if (!isPunishing) btn.innerText = translations[currentLang].btn;
+                startGlitchCycle();
+            }, 1000);
+        }, Math.random() * 3000 + 3000);
+    }
+
+    // --- 5. ADSGRAM ---
+    let AdController = null;
+    try {
+        if (window.Adsgram) {
+            AdController = window.Adsgram.init({ blockId: "8812721975" });
+        }
+    } catch (e) { console.error("Adsgram init failed", e); }
+
+    function showAd() {
+        if (isPunishing) return;
+        if (!AdController) {
+            alert("Adsgram not loaded yet");
+            return;
+        }
+        
+        AdController.show().then(() => {
+            score += 1000;
+            updateUI();
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            titleEl.innerText = translations[currentLang].bonus;
+            setTimeout(() => { if (!isGlitchActive && !isPunishing) titleEl.innerText = translations[currentLang].title; }, 2000);
+            for(let i=0; i<20; i++) spawnDataBlock("var(--glitch-color)");
+        }).catch((err) => {
+            console.error("Ad failed", err);
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+        });
+    }
+
+    // --- 6. EVENT LISTENERS ---
+    // Use both pointerdown and click for maximum compatibility
     btn.addEventListener('pointerdown', triggerAction);
-    
-    // Initial UI update
+    document.getElementById("nav-earn").addEventListener('click', showAd);
+
+    // Initial Start
     updateUI();
     startGlitchCycle();
-    
-    // Let Telegram know we are ready
     tg.ready();
 </script>
 
