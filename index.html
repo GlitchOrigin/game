@@ -6,6 +6,8 @@
     <title>GLITCH WORLD - TELEGRAM EDITION</title>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Adsgram SDK -->
+    <script src="https://sad.adsgram.ai/js/adsgram-ad-sdk.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=JetBrains+Mono:wght@800&display=swap');
 
@@ -222,6 +224,7 @@
 
 <nav class="nav-bar">
     <div class="nav-item" id="nav-play" data-text="PLAY">PLAY</div>
+    <div class="nav-item" id="nav-earn" data-text="EARN" onclick="showAd()" style="color: var(--glitch-color); font-weight: bold; border: 1px solid var(--glitch-color); padding: 5px 10px;">EARN</div>
     <div class="nav-item" id="nav-quests" data-text="QUESTS">QUESTS</div>
     <div class="nav-item" id="nav-shop" data-text="SHOP">SHOP</div>
     <div class="nav-item" id="nav-rank" data-text="RANK">RANK</div>
@@ -241,6 +244,9 @@
     tg.setHeaderColor('#000000');
     tg.setBackgroundColor('#000000');
 
+    // Adsgram Integration
+    const AdController = window.Adsgram.init({ blockId: "8812721975" });
+
     let score = 0;
     let combo = 0;
     let comboTimer;
@@ -252,16 +258,16 @@
         en: {
             title: "SYSTEM DESTRUCTION", btn: "DO NOT TOUCH", score: "CHAOS: ",
             settings: "SETTINGS", close: "CLOSE",
-            play: "PLAY", quests: "QUESTS", shop: "SHOP", rank: "RANK",
+            play: "PLAY", quests: "QUESTS", shop: "SHOP", rank: "RANK", earn: "EARN",
             trash: ["TRASH DETECTED", "KERNEL PANIC", "CPU MELTING", "DATA LEAK", "GET OUT", "FATAL ERR"],
-            glitch: "DANGER!!!", erasing: "WIPING DATA..."
+            glitch: "DANGER!!!", erasing: "WIPING DATA...", bonus: "BONUS +1000!"
         },
         ru: {
             title: "РАЗРУШЕНИЕ СИСТЕМЫ", btn: "НЕ ТРОГАЙ", score: "ХАОС: ",
             settings: "НАСТРОЙКИ", close: "ЗАКРЬIТЬ",
-            play: "ИГРАТЬ", quests: "КВЕСТЫ", shop: "МАГАЗИН", rank: "РЕЙТИНГ",
+            play: "ИГРАТЬ", quests: "КВЕСТЫ", shop: "МАГАЗИН", rank: "РЕЙТИНГ", earn: "EARN",
             trash: ["МУСОР ОБНАРУЖЕН", "ПАНИКА ЯДРА", "ПЛАВЛЕНИЕ ПРОЦЕССОРА", "УТЕЧКА ДАННЫХ", "ВЫХОДИ", "ОШИБКА"],
-            glitch: "ОПАСНО!!!", erasing: "УДАЛЕНИЕ..."
+            glitch: "ОПАСНО!!!", erasing: "УДАЛЕНИЕ...", bonus: "БОНУС +1000!"
         }
     };
 
@@ -303,10 +309,35 @@
         
         document.getElementById("settings-title").innerText = t.settings;
         document.getElementById("close-btn").innerText = t.close;
-        ["nav-play", "nav-quests", "nav-shop", "nav-rank"].forEach(id => {
+        
+        ["nav-play", "nav-quests", "nav-shop", "nav-rank", "nav-earn"].forEach(id => {
             const el = document.getElementById(id);
-            const text = t[id.split('-')[1]];
+            const key = id.split('-')[1];
+            const text = t[key];
             el.innerText = text; el.setAttribute('data-text', text);
+        });
+    }
+
+    function showAd() {
+        if (isPunishing) return;
+        
+        AdController.show().then((result) => {
+            // User watched the ad until the end
+            score += 1000;
+            updateUI();
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            
+            // Visual feedback
+            titleEl.innerText = translations[currentLang].bonus;
+            setTimeout(() => {
+                if (!isGlitchActive && !isPunishing) titleEl.innerText = translations[currentLang].title;
+            }, 2000);
+            
+            for(let i=0; i<20; i++) spawnDataBlock("var(--glitch-color)");
+        }).catch((result) => {
+            // Error or user closed the ad early
+            console.error("Adsgram error or skip:", result);
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
         });
     }
 
