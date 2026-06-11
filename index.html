@@ -6,6 +6,7 @@
     <title>GLITCH WORLD - TELEGRAM EDITION</title>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=JetBrains+Mono:wght@800&display=swap');
 
@@ -192,6 +193,23 @@
     </style>
 </head>
 <body class="crt">
+    
+    <button id="ad">Show ad</button>
+        <script>
+            /// Вставьте ваш blockId
+            const AdController = window.Adsgram.init({ blockId: "34799" });
+            const button = document.getElementById('ad');
+            button.addEventListener('click', () => {
+                AdController.show().then((result) => {
+                    // Пользователь просмотрел рекламу до конца или пропустил её в Interstitial формате
+                    // Ваш код для награждения пользователя
+                    alert('Reward');
+                }).catch((result) => {
+                    // Ошибка при воспроизведении рекламы
+                    alert(JSON.stringify(result, null, 4));
+                })
+            })
+        </script>
 
 <div class="noise-bg"></div>
 <div class="hit-overlay" id="flash"></div>
