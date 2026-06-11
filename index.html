@@ -7,7 +7,7 @@
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Adsgram SDK -->
-    <script src="https://sad.adsgram.ai/js/adsgram-ad-sdk.js"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=JetBrains+Mono:wght@800&display=swap');
 
@@ -374,13 +374,61 @@
     }
 
     // --- 5. ADSGRAM ---
-    let AdController = null;
-    try {
-        if (window.Adsgram) {
-            AdController = window.Adsgram.init({ blockId: "8812721975" });
-        }
-    } catch (e) { console.error("Adsgram init failed", e); }
+let AdController = null;
 
+window.addEventListener("load", () => {
+    try {
+        if (!window.Adsgram) {
+            console.error("AdsGram SDK not loaded");
+            return;
+        }
+
+        AdController = window.Adsgram.init({
+            blockId: "34799",
+            debug: true
+        });
+
+        console.log("AdsGram initialized");
+    } catch (e) {
+        console.error("AdsGram init failed:", e);
+    }
+});
+
+async function showAd() {
+    if (isPunishing) return;
+
+    if (!AdController) {
+        alert("Реклама еще загружается...");
+        return;
+    }
+
+    try {
+        await AdController.show();
+
+        score += 1000;
+        updateUI();
+
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        titleEl.innerText = translations[currentLang].bonus;
+
+        setTimeout(() => {
+            if (!isGlitchActive && !isPunishing) {
+                titleEl.innerText = translations[currentLang].title;
+            }
+        }, 2000);
+
+        for (let i = 0; i < 20; i++) {
+            spawnDataBlock("var(--glitch-color)");
+        }
+
+    } catch (err) {
+        console.error("Ad failed:", err);
+        alert("Реклама недоступна");
+    }
+}
     function showAd() {
         if (isPunishing) return;
         if (!AdController) {
