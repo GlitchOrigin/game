@@ -217,6 +217,7 @@
         <div id="score">CHAOS: 0</div>
         <div id="combo">COMBO X1</div>
     </div>
+    <div id="user-display" style="margin-top: 15px; font-family: var(--mono-font); color: var(--glitch-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7;">USER: UNKNOWN</div>
 </div>
 
 <nav class="nav-bar">
@@ -230,6 +231,10 @@
     // Initialize Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.expand();
+    
+    // Disable vertical swipes to prevent accidental closing and keep it "expanded"
+    tg.isVerticalSwipesEnabled = false;
+    
     tg.enableClosingConfirmation();
     
     // Set pure black theme for Telegram
@@ -281,6 +286,15 @@
 
     function updateUI() {
         const t = translations[currentLang];
+        
+        // Display Telegram User Info
+        const user = tg.initDataUnsafe?.user;
+        const userDisplay = document.getElementById("user-display");
+        if (user) {
+            const name = user.username || user.first_name || "UNKNOWN";
+            userDisplay.innerText = "USER: " + name;
+        }
+
         if (!isGlitchActive && !isPunishing) {
             titleEl.innerText = t.title;
             btn.innerText = t.btn;
