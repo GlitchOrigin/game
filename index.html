@@ -163,12 +163,15 @@
         .nav-item {
             font-family: var(--main-font); font-size: clamp(0.6rem, 2.5vw, 0.8rem);
             color: white; text-transform: uppercase; cursor: pointer; position: relative;
-            padding: 5px;
+            padding: 10px 5px; /* Increased padding for better touch target */
             white-space: nowrap;
+            -webkit-user-select: none;
+            user-select: none;
         }
-        .nav-item:hover {
+        .nav-item:active {
             color: var(--glitch-color);
-            text-shadow: 0 0 5px var(--glitch-color);
+            text-shadow: 0 0 10px var(--glitch-color);
+            transform: scale(0.95);
         }
 
         .data-block { position: absolute; background: var(--glitch-color); width: 40px; height: 10px; opacity: 0.6; pointer-events: none; z-index: 2; }
@@ -251,7 +254,7 @@
     tg.setBackgroundColor('#000000');
 
     // Initialize Adsgram
-    const AdController = window.Adsgram.init({ blockId: "34799" });
+    const AdController = window.Adsgram.init({ blockId: "34799", debug: true });
 
     let score = 0;
     let combo = 0;
@@ -299,12 +302,15 @@
     function updateUI() {
         const t = translations[currentLang];
         
-        // Display Telegram User Info
+        // Display Telegram User Info - Fixed for production
         const user = tg.initDataUnsafe?.user;
         const userDisplay = document.getElementById("user-display");
         if (user) {
             const name = user.username || user.first_name || "UNKNOWN";
             userDisplay.innerText = "USER: " + name;
+        } else {
+            // Fallback for development/outside Telegram
+            userDisplay.innerText = "USER: DEV_MODE";
         }
 
         if (!isGlitchActive && !isPunishing) {
@@ -455,20 +461,35 @@
 
     btn.addEventListener('pointerdown', triggerAction);
 
-    // Ads logic
-    const adsBtn = document.getElementById('nav-ads');
-    adsBtn.addEventListener('click', () => {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        AdController.show().then((result) => {
-            // Reward user
-            score += 1000;
-            updateUI();
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            alert('REWARD: +1000 CHAOS');
-        }).catch((result) => {
-            console.error('Ads error:', result);
-            alert('Ads error: ' + (result.error || 'Unknown error'));
-        });
+    // Navigation and Ads logic with better touch support
+    const navItems = {
+        'nav-play': () => { console.log('Play clicked'); },
+        'nav-quests': () => { console.log('Quests clicked'); },
+        'nav-shop': () => { console.log('Shop clicked'); },
+        'nav-rank': () => { console.log('Rank clicked'); },
+        'nav-ads': () => {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            AdController.show().then((result) => {
+                score += 1000;
+                updateUI();
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert('REWARD: +1000 CHAOS');
+            }).catch((result) => {
+                console.error('Ads error:', result);
+                tg.showAlert('Ads error: ' + (result.error || 'Unknown error'));
+            });
+        }
+    };
+
+    Object.keys(navItems).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            // Use pointerdown for faster response on mobile
+            el.addEventListener('pointerdown', (e) => {
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                navItems[id]();
+            });
+        }
     });
     
     // Initial UI update
