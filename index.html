@@ -163,7 +163,7 @@
         .nav-item {
             font-family: var(--main-font); font-size: clamp(0.6rem, 2.5vw, 0.8rem);
             color: white; text-transform: uppercase; cursor: pointer; position: relative;
-            padding: 10px 5px; /* Increased padding for better touch target */
+            padding: 10px 5px;
             white-space: nowrap;
             -webkit-user-select: none;
             user-select: none;
@@ -243,23 +243,20 @@
     // Initialize Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.expand();
-    
-    // Disable vertical swipes to prevent accidental closing and keep it "expanded"
     tg.isVerticalSwipesEnabled = false;
-    
     tg.enableClosingConfirmation();
-    
-    // Set pure black theme for Telegram
     tg.setHeaderColor('#000000');
     tg.setBackgroundColor('#000000');
 
     // Initialize Adsgram
     const AdController = window.Adsgram.init({ blockId: "34799", debug: true });
 
-    let score = 0;
+    // Load initial data from localStorage
+    let score = parseInt(localStorage.getItem('glitch_chaos_score')) || 0;
+    let currentLang = localStorage.getItem('glitch_lang') || 'en';
+    
     let combo = 0;
     let comboTimer;
-    let currentLang = 'en';
     let isGlitchActive = false;
     let isPunishing = false;
 
@@ -288,6 +285,11 @@
     const settingsMenu = document.getElementById("settings-menu");
     const pixelOverlay = document.getElementById("pixels");
 
+    function saveGame() {
+        localStorage.setItem('glitch_chaos_score', score);
+        localStorage.setItem('glitch_lang', currentLang);
+    }
+
     function toggleSettings() { 
         settingsMenu.classList.toggle("open");
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
@@ -295,6 +297,7 @@
     
     function setLang(lang) { 
         currentLang = lang; 
+        saveGame();
         updateUI(); 
         toggleSettings(); 
     }
@@ -302,14 +305,12 @@
     function updateUI() {
         const t = translations[currentLang];
         
-        // Display Telegram User Info - Fixed for production
         const user = tg.initDataUnsafe?.user;
         const userDisplay = document.getElementById("user-display");
         if (user) {
             const name = user.username || user.first_name || "UNKNOWN";
             userDisplay.innerText = "USER: " + name;
         } else {
-            // Fallback for development/outside Telegram
             userDisplay.innerText = "USER: DEV_MODE";
         }
 
@@ -379,7 +380,6 @@
 
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
 
-        // Эффект стирания баланса
         scoreEl.classList.add("erasing");
         let tempScore = score;
         const eraseInterval = setInterval(() => {
@@ -397,7 +397,6 @@
             return s.split('').map(c => Math.random() > 0.5 ? chars[Math.floor(Math.random() * chars.length)] : c).join('');
         }
 
-        // Визуальный хаос
         document.body.classList.add("punishment-active");
         pixelOverlay.style.display = "block";
         
@@ -412,6 +411,7 @@
             isPunishing = false;
             score = 0;
             combo = 0;
+            saveGame();
             document.body.classList.remove("punishment-active");
             scoreEl.classList.remove("erasing");
             pixelOverlay.style.display = "none";
@@ -433,6 +433,7 @@
 
         combo++;
         score += combo;
+        saveGame();
         scoreEl.innerText = translations[currentLang].score + score;
         
         comboEl.style.opacity = "1";
@@ -461,7 +462,6 @@
 
     btn.addEventListener('pointerdown', triggerAction);
 
-    // Navigation and Ads logic with better touch support
     const navItems = {
         'nav-play': () => { console.log('Play clicked'); },
         'nav-quests': () => { console.log('Quests clicked'); },
@@ -471,6 +471,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             AdController.show().then((result) => {
                 score += 1000;
+                saveGame();
                 updateUI();
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 tg.showAlert('REWARD: +1000 CHAOS');
@@ -484,7 +485,6 @@
     Object.keys(navItems).forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            // Use pointerdown for faster response on mobile
             el.addEventListener('pointerdown', (e) => {
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
                 navItems[id]();
@@ -492,11 +492,8 @@
         }
     });
     
-    // Initial UI update
     updateUI();
     startGlitchCycle();
-    
-    // Let Telegram know we are ready
     tg.ready();
 </script>
 
