@@ -310,7 +310,9 @@
     // Try to get Telegram ID
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         userId = tg.initDataUnsafe.user.id.toString();
-        userName = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name || "UNKNOWN";
+        // Use username if exists, otherwise use first_name + last_name
+        const user = tg.initDataUnsafe.user;
+        userName = user.username || (user.first_name + (user.last_name ? " " + user.last_name : ""));
     }
 
     const translations = {
@@ -361,6 +363,8 @@
                 updateUI();
             }
         }
+        // Force update name in DB if it was unknown or changed
+        saveToFirebase();
     }, { onlyOnce: true });
 
     window.isInitialLoad = true;
