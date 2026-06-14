@@ -239,7 +239,25 @@
     <div class="nav-item" id="nav-ads" data-text="ADS">ADS</div>
 </nav>
 
-<script>
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDat3B7qhTuYy0f8m2X2fhHjq25rnfOyOs",
+        authDomain: "glitch-5c987.firebaseapp.com",
+        databaseURL: "https://glitch-5c987-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "glitch-5c987",
+        storageBucket: "glitch-5c987.firebasestorage.app",
+        messagingSenderId: "50137631153",
+        appId: "1:50137631153:web:ed78f4b882c93b9ad55590",
+        measurementId: "G-0RR49FNPYT"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
     // Initialize Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -251,14 +269,19 @@
     // Initialize Adsgram
     const AdController = window.Adsgram.init({ blockId: "34799", debug: true });
 
-    // Load initial data from localStorage
-    let score = parseInt(localStorage.getItem('glitch_chaos_score')) || 0;
-    let currentLang = localStorage.getItem('glitch_lang') || 'en';
-    
+    // State
+    let score = 0;
+    let currentLang = 'en';
     let combo = 0;
     let comboTimer;
     let isGlitchActive = false;
     let isPunishing = false;
+    let userId = "guest";
+
+    // Try to get Telegram ID
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        userId = tg.initDataUnsafe.user.id.toString();
+    }
 
     const translations = {
         en: {
@@ -285,26 +308,48 @@
     const settingsMenu = document.getElementById("settings-menu");
     const pixelOverlay = document.getElementById("pixels");
 
-    function saveGame() {
-        localStorage.setItem('glitch_chaos_score', score);
-        localStorage.setItem('glitch_lang', currentLang);
+    // Firebase Save/Load
+    function saveToFirebase() {
+        set(ref(db, 'users/' + userId), {
+            score: score,
+            lang: currentLang,
+            lastSeen: Date.now()
+        });
     }
+
+    // Load from Firebase once on start
+    const userRef = ref(db, 'users/' + userId);
+    onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            // Only update score if it's higher (simple sync) or if it's the initial load
+            if (window.isInitialLoad) {
+                score = data.score || 0;
+                currentLang = data.lang || 'en';
+                window.isInitialLoad = false;
+                updateUI();
+            }
+        }
+    }, { onlyOnce: true });
+
+    window.isInitialLoad = true;
 
     function toggleSettings() { 
         settingsMenu.classList.toggle("open");
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
     }
+    window.toggleSettings = toggleSettings;
     
     function setLang(lang) { 
         currentLang = lang; 
-        saveGame();
+        saveToFirebase();
         updateUI(); 
         toggleSettings(); 
     }
+    window.setLang = setLang;
 
     function updateUI() {
         const t = translations[currentLang];
-        
         const user = tg.initDataUnsafe?.user;
         const userDisplay = document.getElementById("user-display");
         if (user) {
@@ -377,7 +422,6 @@
         if (isPunishing) return;
         isPunishing = true;
         isGlitchActive = false;
-
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
 
         scoreEl.classList.add("erasing");
@@ -411,7 +455,7 @@
             isPunishing = false;
             score = 0;
             combo = 0;
-            saveGame();
+            saveToFirebase();
             document.body.classList.remove("punishment-active");
             scoreEl.classList.remove("erasing");
             pixelOverlay.style.display = "none";
@@ -423,22 +467,19 @@
     const triggerAction = (e) => {
         if (e && e.cancelable) e.preventDefault();
         if (isPunishing) return;
-        
         if (isGlitchActive) {
             triggerPunishment();
             return;
         }
-
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
         combo++;
         score += combo;
-        saveGame();
+        saveToFirebase();
         scoreEl.innerText = translations[currentLang].score + score;
         
         comboEl.style.opacity = "1";
         comboEl.innerText = "COMBO X" + combo;
-        
         const scale = Math.min(1 + combo/20, 1.8);
         comboEl.style.transform = `scale(${scale})`;
         
@@ -448,7 +489,6 @@
         flash.classList.remove("flash");
         void flash.offsetWidth;
         flash.classList.add("flash");
-
         for(let i=0; i<5; i++) spawnDataBlock();
 
         if(Math.random() > 0.7) {
@@ -471,7 +511,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             AdController.show().then((result) => {
                 score += 1000;
-                saveGame();
+                saveToFirebase();
                 updateUI();
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 tg.showAlert('REWARD: +1000 CHAOS');
