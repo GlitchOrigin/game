@@ -225,10 +225,26 @@
             background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px);
         }
 
+        /* Pure black top area */
+        .top-shroud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to bottom, 
+                rgba(0,0,0,1) 0%, 
+                rgba(0,0,0,1) 40%, 
+                rgba(0,0,0,0) 100%);
+            z-index: 1050;
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body class="crt">
 
+<div class="top-shroud"></div>
 <div class="noise-bg"></div>
 <div class="hit-overlay" id="flash"></div>
 <div class="pixel-destruction" id="pixels"></div>
