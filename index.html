@@ -194,9 +194,15 @@
         }
 
         .data-block { position: absolute; background: var(--glitch-color); width: 40px; height: 10px; opacity: 0.6; pointer-events: none; z-index: 2; }
-        .hit-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; pointer-events: none; z-index: 2000; opacity: 0; }
-        .flash { animation: flash-anim 0.1s; }
-        @keyframes flash-anim { 0% { opacity: 0.6; } 100% { opacity: 0; } }
+        
+        /* Updated Flash Overlay - Soft Radial Gradient */
+        .hit-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none; z-index: 2000; opacity: 0; 
+        }
+        .flash { animation: flash-anim 0.15s ease-out; }
+        @keyframes flash-anim { 0% { opacity: 1; } 100% { opacity: 0; } }
 
         /* ИНТЕНСИВНЫЙ ГЛИТЧ ПРИ НАКАЗАНИИ */
         .punishment-active {
@@ -310,7 +316,6 @@
     // Try to get Telegram ID
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         userId = tg.initDataUnsafe.user.id.toString();
-        // Use username if exists, otherwise use first_name + last_name
         const user = tg.initDataUnsafe.user;
         userName = user.username || (user.first_name + (user.last_name ? " " + user.last_name : ""));
     }
@@ -363,7 +368,6 @@
                 updateUI();
             }
         }
-        // Force update name in DB if it was unknown or changed
         saveToFirebase();
     }, { onlyOnce: true });
 
