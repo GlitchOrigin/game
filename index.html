@@ -55,16 +55,16 @@
             cursor: pointer; z-index: 1100; fill: white; filter: drop-shadow(0 0 5px var(--accent-color));
         }
 
-        #settings-menu {
+        #settings-menu, #rank-menu {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
             background: rgba(0, 0, 0, 0.98);
-            padding: 40px; border: 2px solid var(--accent-color);
+            padding: 30px; border: 2px solid var(--accent-color);
             z-index: 1200; transition: 0.2s; text-align: center;
             width: 90%; max-width: 400px;
             clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%);
             box-shadow: 10px 10px 0 var(--glitch-color), -10px -10px 0 var(--accent-color);
         }
-        #settings-menu.open { transform: translate(-50%, -50%) scale(1); animation: menu-glitch 0.3s infinite; }
+        #settings-menu.open, #rank-menu.open { transform: translate(-50%, -50%) scale(1); animation: menu-glitch 0.3s infinite; }
         
         @keyframes menu-glitch {
             0% { clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%); }
@@ -78,6 +78,25 @@
             cursor: pointer; font-weight: 900; width: 100%; transition: 0.1s;
         }
         .lang-btn:hover { background: var(--accent-color); border-color: var(--glitch-color); transform: skew(-5deg); box-shadow: 5px 5px 0 var(--glitch-color); }
+
+        /* Leaderboard Style */
+        .rank-list {
+            margin: 20px 0; max-height: 300px; overflow-y: auto;
+            text-align: left; font-family: var(--mono-font);
+        }
+        .rank-item {
+            display: flex; justify-content: space-between;
+            padding: 10px; border-bottom: 1px dashed var(--glitch-color);
+            font-size: 0.9rem;
+        }
+        .rank-item.current-user {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid var(--glitch-color);
+            color: var(--glitch-color);
+        }
+        .rank-pos { color: var(--accent-color); margin-right: 10px; }
+        .rank-name { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rank-score { color: var(--glitch-color); margin-left: 10px; }
 
         .main-content { display: flex; flex-direction: column; align-items: center; z-index: 5; margin-top: -5vh; transition: filter 0.1s; }
 
@@ -219,6 +238,15 @@
     <button id="close-btn" class="lang-btn" style="border-color: var(--accent-color); color: var(--accent-color);" onclick="toggleSettings()">CLOSE</button>
 </div>
 
+<!-- Rank Menu Overlay -->
+<div id="rank-menu">
+    <h2 id="rank-title">TOP CHAOS</h2>
+    <div class="rank-list" id="rank-list">
+        <div class="rank-item">LOADING...</div>
+    </div>
+    <button class="lang-btn" style="border-color: var(--accent-color); color: var(--accent-color);" onclick="toggleRank()">CLOSE</button>
+</div>
+
 <div class="main-content" id="content">
     <h1 id="title">SYSTEM DESTRUCTION</h1>
     <div class="trash-btn-wrapper">
@@ -242,7 +270,7 @@
 <!-- Firebase SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDat3B7qhTuYy0f8m2X2fhHjq25rnfOyOs",
@@ -277,10 +305,12 @@
     let isGlitchActive = false;
     let isPunishing = false;
     let userId = "guest";
+    let userName = "UNKNOWN";
 
     // Try to get Telegram ID
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         userId = tg.initDataUnsafe.user.id.toString();
+        userName = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name || "UNKNOWN";
     }
 
     const translations = {
@@ -289,14 +319,14 @@
             settings: "SETTINGS", close: "CLOSE",
             play: "PLAY", quests: "QUESTS", shop: "SHOP", rank: "RANK", ads: "ADS",
             trash: ["TRASH DETECTED", "KERNEL PANIC", "CPU MELTING", "DATA LEAK", "GET OUT", "FATAL ERR"],
-            glitch: "DANGER!!!", erasing: "WIPING DATA..."
+            glitch: "DANGER!!!", erasing: "WIPING DATA...", rankTitle: "TOP CHAOS"
         },
         ru: {
             title: "РАЗРУШЕНИЕ СИСТЕМЫ", btn: "НЕ ТРОГАЙ", score: "ХАОС: ",
             settings: "НАСТРОЙКИ", close: "ЗАКРЬIТЬ",
             play: "ИГРАТЬ", quests: "КВЕСТЫ", shop: "МАГАЗИН", rank: "РЕЙТИНГ", ads: "РЕКЛАМА",
             trash: ["МУСОР ОБНАРУЖЕН", "ПАНИКА ЯДРА", "ПЛАВЛЕНИЕ ПРОЦЕССОРА", "УТЕЧКА ДАННЫХ", "ВЫХОДИ", "ОШИБКА"],
-            glitch: "ОПАСНО!!!", erasing: "УДАЛЕНИЕ..."
+            glitch: "ОПАСНО!!!", erasing: "УДАЛЕНИЕ...", rankTitle: "ЛИДЕРЫ ХАОСА"
         }
     };
 
@@ -306,11 +336,13 @@
     const flash = document.getElementById("flash");
     const titleEl = document.getElementById("title");
     const settingsMenu = document.getElementById("settings-menu");
+    const rankMenu = document.getElementById("rank-menu");
     const pixelOverlay = document.getElementById("pixels");
 
     // Firebase Save/Load
     function saveToFirebase() {
         set(ref(db, 'users/' + userId), {
+            name: userName,
             score: score,
             lang: currentLang,
             lastSeen: Date.now()
@@ -322,7 +354,6 @@
     onValue(userRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            // Only update score if it's higher (simple sync) or if it's the initial load
             if (window.isInitialLoad) {
                 score = data.score || 0;
                 currentLang = data.lang || 'en';
@@ -339,6 +370,44 @@
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
     }
     window.toggleSettings = toggleSettings;
+
+    function toggleRank() {
+        rankMenu.classList.toggle("open");
+        if (rankMenu.classList.contains("open")) {
+            fetchLeaderboard();
+        }
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    }
+    window.toggleRank = toggleRank;
+
+    function fetchLeaderboard() {
+        const rankList = document.getElementById("rank-list");
+        rankList.innerHTML = '<div class="rank-item">FETCHING DATA...</div>';
+        
+        const topUsersQuery = query(ref(db, 'users'), orderByChild('score'), limitToLast(10));
+        onValue(topUsersQuery, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const users = Object.entries(data)
+                    .map(([id, val]) => ({ id, ...val }))
+                    .sort((a, b) => b.score - a.score);
+                
+                rankList.innerHTML = "";
+                users.forEach((user, index) => {
+                    const item = document.createElement("div");
+                    item.className = "rank-item" + (user.id === userId ? " current-user" : "");
+                    item.innerHTML = `
+                        <span class="rank-pos">#${index + 1}</span>
+                        <span class="rank-name">${user.name || 'UNKNOWN'}</span>
+                        <span class="rank-score">${user.score}</span>
+                    `;
+                    rankList.appendChild(item);
+                });
+            } else {
+                rankList.innerHTML = '<div class="rank-item">NO DATA</div>';
+            }
+        }, { onlyOnce: true });
+    }
     
     function setLang(lang) { 
         currentLang = lang; 
@@ -350,14 +419,8 @@
 
     function updateUI() {
         const t = translations[currentLang];
-        const user = tg.initDataUnsafe?.user;
         const userDisplay = document.getElementById("user-display");
-        if (user) {
-            const name = user.username || user.first_name || "UNKNOWN";
-            userDisplay.innerText = "USER: " + name;
-        } else {
-            userDisplay.innerText = "USER: DEV_MODE";
-        }
+        userDisplay.innerText = "USER: " + userName;
 
         if (!isGlitchActive && !isPunishing) {
             titleEl.innerText = t.title;
@@ -367,6 +430,7 @@
         
         document.getElementById("close-btn").innerText = t.close;
         document.getElementById("settings-title").innerText = t.settings;
+        document.getElementById("rank-title").innerText = t.rankTitle;
         
         ["nav-play", "nav-quests", "nav-shop", "nav-rank", "nav-ads"].forEach(id => {
             const el = document.getElementById(id);
@@ -503,10 +567,13 @@
     btn.addEventListener('pointerdown', triggerAction);
 
     const navItems = {
-        'nav-play': () => { console.log('Play clicked'); },
-        'nav-quests': () => { console.log('Quests clicked'); },
-        'nav-shop': () => { console.log('Shop clicked'); },
-        'nav-rank': () => { console.log('Rank clicked'); },
+        'nav-play': () => { 
+            rankMenu.classList.remove("open");
+            settingsMenu.classList.remove("open");
+        },
+        'nav-quests': () => { tg.showAlert('Coming Soon...'); },
+        'nav-shop': () => { tg.showAlert('Coming Soon...'); },
+        'nav-rank': () => { toggleRank(); },
         'nav-ads': () => {
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             AdController.show().then((result) => {
