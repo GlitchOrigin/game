@@ -115,14 +115,21 @@
             position: relative; width: clamp(200px, 60vw, 280px); height: clamp(200px, 60vw, 280px);
             margin: 1rem 0;
         }
-        #btn {
+        #btn, .extra-btn {
             position: absolute; width: 100%; height: 100%; background: var(--accent-color);
             border: none; color: white; font-family: var(--main-font); font-size: 1.3rem;
             font-weight: 900; cursor: pointer; clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
             box-shadow: 10px 10px 0 var(--glitch-color), -10px -10px 0 #003cff;
             animation: btn-insane 0.3s infinite;
+            z-index: 10;
         }
         
+        .extra-btn {
+            width: 150px; height: 150px;
+            font-size: 0.9rem;
+            animation: btn-insane 0.5s infinite;
+        }
+
         #btn.glitch-active {
             background: #fff !important;
             color: #000 !important;
@@ -195,7 +202,6 @@
 
         .data-block { position: absolute; background: var(--glitch-color); width: 40px; height: 10px; opacity: 0.6; pointer-events: none; z-index: 2; }
         
-        /* Updated Flash Overlay - Soft Radial Gradient */
         .hit-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
@@ -204,7 +210,6 @@
         .flash { animation: flash-anim 0.15s ease-out; }
         @keyframes flash-anim { 0% { opacity: 1; } 100% { opacity: 0; } }
 
-        /* ИНТЕНСИВНЫЙ ГЛИТЧ ПРИ НАКАЗАНИИ */
         .punishment-active {
             animation: screen-chaos 0.1s infinite !important;
             filter: hue-rotate(90deg) contrast(300%) !important;
@@ -222,22 +227,27 @@
         .pixel-destruction {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 3000; display: none;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px);
+            background: url('https://media.giphy.com/media/oEI9uWUznW3D2/giphy.gif');
+            opacity: 0.3;
+            mix-blend-mode: overlay;
         }
 
-        /* Pure black top area */
+        #decay-timer {
+            position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+            font-size: 5rem; color: #ff0000; font-family: var(--mono-font);
+            z-index: 3100; display: none; text-shadow: 0 0 20px #ff0000;
+            animation: timer-pulse 0.5s infinite;
+        }
+        @keyframes timer-pulse {
+            0% { transform: translateX(-50%) scale(1); opacity: 1; }
+            50% { transform: translateX(-50%) scale(1.2); opacity: 0.5; }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+
         .top-shroud {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100px;
-            background: linear-gradient(to bottom, 
-                rgba(0,0,0,1) 0%, 
-                rgba(0,0,0,1) 40%, 
-                rgba(0,0,0,0) 100%);
-            z-index: 1050;
-            pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100px;
+            background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+            z-index: 1050; pointer-events: none;
         }
 
     </style>
@@ -248,6 +258,7 @@
 <div class="noise-bg"></div>
 <div class="hit-overlay" id="flash"></div>
 <div class="pixel-destruction" id="pixels"></div>
+<div id="decay-timer">5.00</div>
 
 <svg id="settings-icon" viewBox="0 0 24 24" onclick="toggleSettings()">
     <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.81,11.69,4.81,12c0,0.31,0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.5c-1.93,0-3.5-1.57-3.5-3.5 s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.93,15.5,12,15.5z"/>
@@ -260,7 +271,6 @@
     <button id="close-btn" class="lang-btn" style="border-color: var(--accent-color); color: var(--accent-color);" onclick="toggleSettings()">CLOSE</button>
 </div>
 
-<!-- Rank Menu Overlay -->
 <div id="rank-menu">
     <h2 id="rank-title">TOP CHAOS</h2>
     <div class="rank-list" id="rank-list">
@@ -271,7 +281,7 @@
 
 <div class="main-content" id="content">
     <h1 id="title">SYSTEM DESTRUCTION</h1>
-    <div class="trash-btn-wrapper">
+    <div class="trash-btn-wrapper" id="btn-container">
         <button id="btn">DO NOT TOUCH</button>
     </div>
     <div id="score-container">
@@ -289,7 +299,6 @@
     <div class="nav-item" id="nav-ads" data-text="ADS">ADS</div>
 </nav>
 
-<!-- Firebase SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
@@ -308,7 +317,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Initialize Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.expand();
     tg.isVerticalSwipesEnabled = false;
@@ -316,7 +324,6 @@
     tg.setHeaderColor('#000000');
     tg.setBackgroundColor('#000000');
 
-    // Initialize Adsgram
     const AdController = window.Adsgram.init({ blockId: "34799", debug: true });
 
     // State
@@ -327,184 +334,253 @@
     let isGlitchActive = false;
     let isPunishing = false;
     let userId = "guest";
-    let userName = "UNKNOWN";
-
-    // Try to get Telegram ID
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        userId = tg.initDataUnsafe.user.id.toString();
-        const user = tg.initDataUnsafe.user;
-        userName = user.username || (user.first_name + (user.last_name ? " " + user.last_name : ""));
-    }
+    let userName = "Unknown User";
+    
+    // New Mechanics State
+    let isTripleActive = false;
+    let buttonsToClick = 0;
+    let isDecayActive = false;
+    let decayTimeLeft = 5.0;
+    let decayInterval;
 
     const translations = {
         en: {
-            title: "SYSTEM DESTRUCTION", btn: "DO NOT TOUCH", score: "CHAOS: ",
-            settings: "SETTINGS", close: "CLOSE",
-            play: "PLAY", quests: "QUESTS", shop: "SHOP", rank: "RANK", ads: "ADS",
-            trash: ["TRASH DETECTED", "KERNEL PANIC", "CPU MELTING", "DATA LEAK", "GET OUT", "FATAL ERR"],
-            glitch: "DANGER!!!", erasing: "WIPING DATA...", rankTitle: "TOP CHAOS"
+            title: "SYSTEM DESTRUCTION",
+            btn: "DO NOT TOUCH",
+            score: "CHAOS: ",
+            erasing: "ERASING...",
+            settings: "SETTINGS",
+            rank: "TOP CHAOS",
+            triple: "PRESS ALL!",
+            decay: "FIX SYSTEM!",
+            trash: ["CRITICAL ERROR", "CORE BREACH", "ACCESS DENIED", "SYSTEM FAILURE", "OVERLOAD"]
         },
         ru: {
-            title: "РАЗРУШЕНИЕ СИСТЕМЫ", btn: "НЕ ТРОГАЙ", score: "ХАОС: ",
-            settings: "НАСТРОЙКИ", close: "ЗАКРЬIТЬ",
-            play: "ИГРАТЬ", quests: "КВЕСТЫ", shop: "МАГАЗИН", rank: "РЕЙТИНГ", ads: "РЕКЛАМА",
-            trash: ["МУСОР ОБНАРУЖЕН", "ПАНИКА ЯДРА", "ПЛАВЛЕНИЕ ПРОЦЕССОРА", "УТЕЧКА ДАННЫХ", "ВЫХОДИ", "ОШИБКА"],
-            glitch: "ОПАСНО!!!", erasing: "УДАЛЕНИЕ...", rankTitle: "ЛИДЕРЫ ХАОСА"
+            title: "РАЗРУШЕНИЕ СИСТЕМЫ",
+            btn: "НЕ ТРОГАТЬ",
+            score: "ХАОС: ",
+            erasing: "УДАЛЕНИЕ...",
+            settings: "НАСТРОЙКИ",
+            rank: "ТОП ХАОСА",
+            triple: "ЖМИ ВСЕ!",
+            decay: "ЧИНИ СИСТЕМУ!",
+            trash: ["КРИТИЧЕСКАЯ ОШИБКА", "РАЗРЫВ ЯДРА", "ОТКАЗАНО В ДОСТУПЕ", "СБОЙ СИСТЕМЫ", "ПЕРЕГРУЗКА"]
         }
     };
 
     const btn = document.getElementById("btn");
+    const btnContainer = document.getElementById("btn-container");
     const scoreEl = document.getElementById("score");
     const comboEl = document.getElementById("combo");
-    const flash = document.getElementById("flash");
     const titleEl = document.getElementById("title");
     const settingsMenu = document.getElementById("settings-menu");
     const rankMenu = document.getElementById("rank-menu");
+    const flash = document.getElementById("flash");
     const pixelOverlay = document.getElementById("pixels");
+    const decayTimerEl = document.getElementById("decay-timer");
 
-    // Firebase Save/Load
+    // Firebase logic
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        userId = tg.initDataUnsafe.user.id.toString();
+        userName = tg.initDataUnsafe.user.first_name || "User" + userId.slice(-4);
+        document.getElementById("user-display").innerText = "USER: " + userName;
+    }
+
     function saveToFirebase() {
+        if (userId === "guest") return;
         set(ref(db, 'users/' + userId), {
             name: userName,
             score: score,
-            lang: currentLang,
-            lastSeen: Date.now()
+            lastUpdate: Date.now()
         });
     }
 
-    // Load from Firebase once on start
-    const userRef = ref(db, 'users/' + userId);
-    onValue(userRef, (snapshot) => {
+    const userScoreRef = ref(db, 'users/' + userId + '/score');
+    onValue(userScoreRef, (snapshot) => {
         const data = snapshot.val();
-        if (data) {
-            if (window.isInitialLoad) {
-                score = data.score || 0;
-                currentLang = data.lang || 'en';
-                window.isInitialLoad = false;
-                updateUI();
-            }
+        if (data !== null && data > score) {
+            score = data;
+            updateUI();
         }
-        saveToFirebase();
-    }, { onlyOnce: true });
+    });
 
-    window.isInitialLoad = true;
-
-    function toggleSettings() { 
-        settingsMenu.classList.toggle("open");
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    function updateUI() {
+        scoreEl.innerText = translations[currentLang].score + score;
+        titleEl.innerText = isDecayActive ? translations[currentLang].decay : (isTripleActive ? translations[currentLang].triple : translations[currentLang].title);
+        btn.innerText = isDecayActive ? translations[currentLang].decay : (isTripleActive ? translations[currentLang].triple : translations[currentLang].btn);
     }
-    window.toggleSettings = toggleSettings;
 
-    function toggleRank() {
+    window.setLang = (lang) => {
+        currentLang = lang;
+        updateUI();
+        document.getElementById("settings-title").innerText = translations[lang].settings;
+        document.getElementById("rank-title").innerText = translations[lang].rank;
+        document.getElementById("close-btn").innerText = lang === 'ru' ? 'ЗАКРЫТЬ' : 'CLOSE';
+        toggleSettings();
+    };
+
+    window.toggleSettings = () => settingsMenu.classList.toggle("open");
+    window.toggleRank = () => {
         rankMenu.classList.toggle("open");
-        if (rankMenu.classList.contains("open")) {
-            fetchLeaderboard();
-        }
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-    }
-    window.toggleRank = toggleRank;
+        if (rankMenu.classList.contains("open")) loadLeaderboard();
+    };
 
-    function fetchLeaderboard() {
-        const rankList = document.getElementById("rank-list");
-        rankList.innerHTML = '<div class="rank-item">FETCHING DATA...</div>';
-        
+    function loadLeaderboard() {
         const topUsersQuery = query(ref(db, 'users'), orderByChild('score'), limitToLast(10));
         onValue(topUsersQuery, (snapshot) => {
             const data = snapshot.val();
+            const listEl = document.getElementById("rank-list");
+            listEl.innerHTML = "";
             if (data) {
-                const users = Object.entries(data)
-                    .map(([id, val]) => ({ id, ...val }))
-                    .sort((a, b) => b.score - a.score);
-                
-                rankList.innerHTML = "";
-                users.forEach((user, index) => {
+                const sorted = Object.entries(data).sort((a, b) => b[1].score - a[1].score);
+                sorted.forEach(([id, user], index) => {
                     const item = document.createElement("div");
-                    item.className = "rank-item" + (user.id === userId ? " current-user" : "");
-                    item.innerHTML = `
-                        <span class="rank-pos">#${index + 1}</span>
-                        <span class="rank-name">${user.name || 'UNKNOWN'}</span>
-                        <span class="rank-score">${user.score}</span>
-                    `;
-                    rankList.appendChild(item);
+                    item.className = "rank-item" + (id === userId ? " current-user" : "");
+                    item.innerHTML = `<span class="rank-pos">#${index + 1}</span><span class="rank-name">${user.name}</span><span class="rank-score">${user.score}</span>`;
+                    listEl.appendChild(item);
                 });
-            } else {
-                rankList.innerHTML = '<div class="rank-item">NO DATA</div>';
-            }
-        }, { onlyOnce: true });
-    }
-    
-    function setLang(lang) { 
-        currentLang = lang; 
-        saveToFirebase();
-        updateUI(); 
-        toggleSettings(); 
-    }
-    window.setLang = setLang;
-
-    function updateUI() {
-        const t = translations[currentLang];
-        const userDisplay = document.getElementById("user-display");
-        userDisplay.innerText = "USER: " + userName;
-
-        if (!isGlitchActive && !isPunishing) {
-            titleEl.innerText = t.title;
-            btn.innerText = t.btn;
-        }
-        if (!isPunishing) scoreEl.innerText = t.score + score;
-        
-        document.getElementById("close-btn").innerText = t.close;
-        document.getElementById("settings-title").innerText = t.settings;
-        document.getElementById("rank-title").innerText = t.rankTitle;
-        
-        ["nav-play", "nav-quests", "nav-shop", "nav-rank", "nav-ads"].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                const key = id.split('-')[1];
-                const text = t[key];
-                el.innerText = text; 
-                el.setAttribute('data-text', text);
             }
         });
     }
 
     function spawnDataBlock(color) {
-        const b = document.createElement("div");
-        b.className = "data-block";
-        b.style.left = Math.random() * 100 + "vw";
-        b.style.top = Math.random() * 100 + "vh";
-        b.style.width = (Math.random() * 100 + 50) + "px";
-        b.style.height = (Math.random() * 20 + 5) + "px";
-        b.style.backgroundColor = color || (Math.random() > 0.5 ? "var(--glitch-color)" : "var(--accent-color)");
-        b.style.zIndex = "4000";
-        document.body.appendChild(b);
-        setTimeout(() => b.remove(), 150);
+        const block = document.createElement("div");
+        block.className = "data-block";
+        block.style.left = Math.random() * 100 + "vw";
+        block.style.top = Math.random() * 100 + "vh";
+        block.style.backgroundColor = color || (Math.random() > 0.5 ? "var(--glitch-color)" : "var(--accent-color)");
+        document.body.appendChild(block);
+        setTimeout(() => block.remove(), 500);
     }
 
     function startGlitchCycle() {
-        if (isPunishing) return;
-        const nextGlitch = Math.random() * (5000 - 3000) + 3000;
+        const delay = Math.random() * 5000 + 3000;
         setTimeout(() => {
-            if (isPunishing) return;
-            activateGlitch();
-            setTimeout(() => {
-                deactivateGlitch();
+            if (isPunishing || isDecayActive || isTripleActive) {
                 startGlitchCycle();
-            }, 1000);
-        }, nextGlitch);
+                return;
+            }
+            
+            const rand = Math.random();
+            if (rand < 0.4) {
+                activateGlitch(); // Original glitch
+            } else if (rand < 0.7) {
+                startTripleEvent(); // New Triple Button
+            } else {
+                startDecayEvent(); // New Pixel Decay
+            }
+        }, delay);
     }
 
     function activateGlitch() {
         isGlitchActive = true;
         btn.classList.add("glitch-active");
-        btn.innerText = translations[currentLang].glitch;
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+        btn.innerText = "!!! ERROR !!!";
+        setTimeout(deactivateGlitch, Math.random() * 1500 + 500);
     }
 
     function deactivateGlitch() {
         isGlitchActive = false;
         btn.classList.remove("glitch-active");
-        if (!isPunishing) btn.innerText = translations[currentLang].btn;
+        if (!isPunishing && !isDecayActive && !isTripleActive) {
+            btn.innerText = translations[currentLang].btn;
+            startGlitchCycle();
+        }
     }
+
+    // --- NEW MECHANICS ---
+
+    function startTripleEvent() {
+        isTripleActive = true;
+        buttonsToClick = 3;
+        updateUI();
+
+        // Create 2 extra buttons
+        for (let i = 0; i < 2; i++) {
+            const extra = document.createElement("button");
+            extra.className = "extra-btn";
+            extra.innerText = translations[currentLang].triple;
+            
+            // Random position
+            const x = Math.random() * (window.innerWidth - 150);
+            const y = Math.random() * (window.innerHeight - 150);
+            extra.style.left = x + "px";
+            extra.style.top = y + "px";
+            
+            extra.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                extra.remove();
+                buttonsToClick--;
+                checkTripleComplete();
+            });
+            document.body.appendChild(extra);
+        }
+    }
+
+    function checkTripleComplete() {
+        if (buttonsToClick <= 1) { // Main button is the last one or already clicked
+            // We'll handle the main button click in triggerAction
+        }
+        if (buttonsToClick === 0) {
+            isTripleActive = false;
+            updateUI();
+            startGlitchCycle();
+        }
+    }
+
+    function startDecayEvent() {
+        isDecayActive = true;
+        decayTimeLeft = 5.0;
+        pixelOverlay.style.display = "block";
+        decayTimerEl.style.display = "block";
+        updateUI();
+
+        decayInterval = setInterval(() => {
+            decayTimeLeft -= 0.05;
+            decayTimerEl.innerText = decayTimeLeft.toFixed(2);
+            pixelOverlay.style.opacity = (1 - decayTimeLeft / 5) * 0.8 + 0.2;
+            
+            if (decayTimeLeft <= 0) {
+                clearInterval(decayInterval);
+                failDecay();
+            }
+        }, 50);
+    }
+
+    function failDecay() {
+        isDecayActive = false;
+        decayTimerEl.style.display = "none";
+        pixelOverlay.style.display = "none";
+        
+        // Penalty: -30%
+        const penalty = Math.floor(score * 0.3);
+        score -= penalty;
+        if (score < 0) score = 0;
+        
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+        tg.showAlert("SYSTEM CORRUPTED! -30% CHAOS");
+        
+        saveToFirebase();
+        updateUI();
+        startGlitchCycle();
+    }
+
+    function fixDecay() {
+        clearInterval(decayInterval);
+        isDecayActive = false;
+        decayTimerEl.style.display = "none";
+        pixelOverlay.style.display = "none";
+        
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        
+        // Reward for fixing?
+        score += 50;
+        saveToFirebase();
+        updateUI();
+        startGlitchCycle();
+    }
+
+    // --- END NEW MECHANICS ---
 
     function triggerPunishment() {
         if (isPunishing) return;
@@ -531,6 +607,7 @@
 
         document.body.classList.add("punishment-active");
         pixelOverlay.style.display = "block";
+        pixelOverlay.style.opacity = "0.5";
         
         const chaosInterval = setInterval(() => {
             spawnDataBlock("#ff0000");
@@ -555,10 +632,26 @@
     const triggerAction = (e) => {
         if (e && e.cancelable) e.preventDefault();
         if (isPunishing) return;
+        
+        if (isDecayActive) {
+            fixDecay();
+            return;
+        }
+
+        if (isTripleActive) {
+            buttonsToClick--;
+            checkTripleComplete();
+            // Don't add score yet or add small amount
+            score += 1;
+            updateUI();
+            return;
+        }
+
         if (isGlitchActive) {
             triggerPunishment();
             return;
         }
+
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
         combo++;
@@ -583,7 +676,7 @@
             const trash = translations[currentLang].trash;
             titleEl.innerText = trash[Math.floor(Math.random() * trash.length)];
             setTimeout(() => {
-                if (!isGlitchActive && !isPunishing) titleEl.innerText = translations[currentLang].title;
+                if (!isGlitchActive && !isPunishing && !isDecayActive && !isTripleActive) titleEl.innerText = translations[currentLang].title;
             }, 350);
         }
     };
