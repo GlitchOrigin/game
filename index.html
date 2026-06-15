@@ -289,9 +289,24 @@
     <div class="nav-item" id="nav-ads" data-text="ADS">ADS</div>
 </nav>
 
-<script>
-    // ===== SERVER CONFIGURATION =====
-    const SERVER_URL = "https://server-ieki.onrender.com";
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDat3B7qhTuYy0f8m2X2fhHjq25rnfOyOs",
+        authDomain: "glitch-5c987.firebaseapp.com",
+        databaseURL: "https://glitch-5c987-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "glitch-5c987",
+        storageBucket: "glitch-5c987.firebasestorage.app",
+        messagingSenderId: "50137631153",
+        appId: "1:50137631153:web:ed78f4b882c93b9ad55590",
+        measurementId: "G-0RR49FNPYT"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
     // Initialize Telegram WebApp
     const tg = window.Telegram.WebApp;
@@ -347,79 +362,33 @@
     const rankMenu = document.getElementById("rank-menu");
     const pixelOverlay = document.getElementById("pixels");
 
-    // ===== SERVER API FUNCTIONS =====
-    async function saveToServer() {
-        try {
-            const response = await fetch(`${SERVER_URL}/api/user/${userId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: userName,
-                    score: score,
-                    lang: currentLang,
-                    lastSeen: Date.now()
-                })
-            });
-            if (!response.ok) {
-                console.error('Failed to save user data:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error saving to server:', error);
-        }
+    // Firebase Save/Load
+    function saveToFirebase() {
+        set(ref(db, 'users/' + userId), {
+            name: userName,
+            score: score,
+            lang: currentLang,
+            lastSeen: Date.now()
+        });
     }
 
-    async function loadFromServer() {
-        try {
-            const response = await fetch(`${SERVER_URL}/api/user/${userId}`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.score !== undefined) {
-                    score = data.score || 0;
-                    currentLang = data.lang || 'en';
-                    updateUI();
-                }
+    // Load from Firebase once on start
+    const userRef = ref(db, 'users/' + userId);
+    onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            if (window.isInitialLoad) {
+                score = data.score || 0;
+                currentLang = data.lang || 'en';
+                window.isInitialLoad = false;
+                updateUI();
             }
-        } catch (error) {
-            console.error('Error loading from server:', error);
         }
-    }
+        saveToFirebase();
+    }, { onlyOnce: true });
 
-    async function fetchLeaderboard() {
-        const rankList = document.getElementById("rank-list");
-        rankList.innerHTML = '<div class="rank-item">FETCHING DATA...</div>';
-        
-        try {
-            const response = await fetch(`${SERVER_URL}/api/leaderboard`);
-            if (response.ok) {
-                const users = await response.json();
-                rankList.innerHTML = "";
-                
-                if (users && users.length > 0) {
-                    users.forEach((user, index) => {
-                        const item = document.createElement("div");
-                        item.className = "rank-item" + (user.id === userId ? " current-user" : "");
-                        item.innerHTML = `
-                            <span class="rank-pos">#${index + 1}</span>
-                            <span class="rank-name">${user.name || 'UNKNOWN'}</span>
-                            <span class="rank-score">${user.score}</span>
-                        `;
-                        rankList.appendChild(item);
-                    });
-                } else {
-                    rankList.innerHTML = '<div class="rank-item">NO DATA</div>';
-                }
-            } else {
-                rankList.innerHTML = '<div class="rank-item">ERROR LOADING</div>';
-            }
-        } catch (error) {
-            console.error('Error fetching leaderboard:', error);
-            rankList.innerHTML = '<div class="rank-item">CONNECTION ERROR</div>';
-        }
-    }
+    window.isInitialLoad = true;
 
-    // ===== UI FUNCTIONS =====
     function toggleSettings() { 
         settingsMenu.classList.toggle("open");
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
@@ -435,9 +404,38 @@
     }
     window.toggleRank = toggleRank;
 
+    function fetchLeaderboard() {
+        const rankList = document.getElementById("rank-list");
+        rankList.innerHTML = '<div class="rank-item">FETCHING DATA...</div>';
+        
+        const topUsersQuery = query(ref(db, 'users'), orderByChild('score'), limitToLast(10));
+        onValue(topUsersQuery, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const users = Object.entries(data)
+                    .map(([id, val]) => ({ id, ...val }))
+                    .sort((a, b) => b.score - a.score);
+                
+                rankList.innerHTML = "";
+                users.forEach((user, index) => {
+                    const item = document.createElement("div");
+                    item.className = "rank-item" + (user.id === userId ? " current-user" : "");
+                    item.innerHTML = `
+                        <span class="rank-pos">#${index + 1}</span>
+                        <span class="rank-name">${user.name || 'UNKNOWN'}</span>
+                        <span class="rank-score">${user.score}</span>
+                    `;
+                    rankList.appendChild(item);
+                });
+            } else {
+                rankList.innerHTML = '<div class="rank-item">NO DATA</div>';
+            }
+        }, { onlyOnce: true });
+    }
+    
     function setLang(lang) { 
         currentLang = lang; 
-        saveToServer();
+        saveToFirebase();
         updateUI(); 
         toggleSettings(); 
     }
@@ -545,7 +543,7 @@
             isPunishing = false;
             score = 0;
             combo = 0;
-            saveToServer();
+            saveToFirebase();
             document.body.classList.remove("punishment-active");
             scoreEl.classList.remove("erasing");
             pixelOverlay.style.display = "none";
@@ -565,7 +563,7 @@
 
         combo++;
         score += combo;
-        saveToServer();
+        saveToFirebase();
         scoreEl.innerText = translations[currentLang].score + score;
         
         comboEl.style.opacity = "1";
@@ -604,7 +602,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             AdController.show().then((result) => {
                 score += 1000;
-                saveToServer();
+                saveToFirebase();
                 updateUI();
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 tg.showAlert('REWARD: +1000 CHAOS');
@@ -625,8 +623,6 @@
         }
     });
     
-    // Initialize on load
-    loadFromServer();
     updateUI();
     startGlitchCycle();
     tg.ready();
