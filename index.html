@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GLITCH WORLD - TELEGRAM EDITION</title>
+    <title>GLITCH COSMOS - TELEGRAM EDITION</title>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
@@ -11,12 +11,19 @@
         @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=JetBrains+Mono:wght@800&display=swap');
 
         :root {
-            --glitch-color: #00ff00;
-            --accent-color: #ff003c;
-            /* Telegram Pure Black Theme */
             --bg-color: #000000;
             --main-font: 'Russo One', sans-serif;
             --mono-font: 'JetBrains Mono', monospace;
+            
+            /* Cosmic Glitch Palette */
+            --neon-pink: #ff00ff;
+            --neon-blue: #00ffff;
+            --neon-purple: #9d00ff;
+            --neon-orange: #ffaa00;
+            --glitch-white: #ffffff;
+            
+            --accent-color: var(--neon-pink);
+            --glitch-color: var(--neon-blue);
         }
 
         * {
@@ -37,6 +44,20 @@
             transition: transform 0.1s;
         }
 
+        /* Star Background */
+        .stars-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+        }
+        .star {
+            position: absolute; background: white; border-radius: 50%;
+            opacity: 0.5; animation: twinkle var(--duration) infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
         /* CRT Scanlines */
         .crt::before {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
@@ -47,22 +68,22 @@
         .noise-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url('https://media.giphy.com/media/oEI9uWUznW3D2/giphy.gif');
-            opacity: 0.05; pointer-events: none; z-index: 1;
+            opacity: 0.03; pointer-events: none; z-index: 1;
         }
 
         #settings-icon {
             position: fixed; top: 20px; right: 20px; width: 35px; height: 35px;
-            cursor: pointer; z-index: 1100; fill: white; filter: drop-shadow(0 0 5px var(--accent-color));
+            cursor: pointer; z-index: 1100; fill: white; filter: drop-shadow(0 0 5px var(--neon-blue));
         }
 
         #settings-menu, #rank-menu {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            background: rgba(0, 0, 0, 0.98);
-            padding: 30px; border: 2px solid var(--accent-color);
+            background: rgba(10, 0, 20, 0.95);
+            padding: 30px; border: 2px solid var(--neon-purple);
             z-index: 1200; transition: 0.2s; text-align: center;
             width: 90%; max-width: 400px;
             clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%);
-            box-shadow: 10px 10px 0 var(--glitch-color), -10px -10px 0 var(--accent-color);
+            box-shadow: 0 0 20px var(--neon-purple), 10px 10px 0 var(--neon-blue), -10px -10px 0 var(--neon-pink);
         }
         #settings-menu.open, #rank-menu.open { transform: translate(-50%, -50%) scale(1); animation: menu-glitch 0.3s infinite; }
         
@@ -77,7 +98,7 @@
             padding: 15px; font-family: var(--main-font); margin: 10px 0;
             cursor: pointer; font-weight: 900; width: 100%; transition: 0.1s;
         }
-        .lang-btn:hover { background: var(--accent-color); border-color: var(--glitch-color); transform: skew(-5deg); box-shadow: 5px 5px 0 var(--glitch-color); }
+        .lang-btn:hover { background: var(--neon-purple); border-color: var(--neon-blue); transform: skew(-5deg); box-shadow: 5px 5px 0 var(--neon-pink); }
 
         /* Leaderboard Style */
         .rank-list {
@@ -86,17 +107,17 @@
         }
         .rank-item {
             display: flex; justify-content: space-between;
-            padding: 10px; border-bottom: 1px dashed var(--glitch-color);
+            padding: 10px; border-bottom: 1px dashed var(--neon-blue);
             font-size: 0.9rem;
         }
         .rank-item.current-user {
-            background: rgba(0, 255, 0, 0.1);
-            border: 1px solid var(--glitch-color);
-            color: var(--glitch-color);
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
         }
-        .rank-pos { color: var(--accent-color); margin-right: 10px; }
+        .rank-pos { color: var(--neon-pink); margin-right: 10px; }
         .rank-name { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .rank-score { color: var(--glitch-color); margin-left: 10px; }
+        .rank-score { color: var(--neon-blue); margin-left: 10px; }
 
         .main-content { display: flex; flex-direction: column; align-items: center; z-index: 5; margin-top: -5vh; transition: filter 0.1s; }
 
@@ -104,37 +125,75 @@
             font-size: clamp(1.2rem, 8vw, 2.5rem); text-transform: uppercase;
             animation: text-vibrate 0.1s infinite; margin-bottom: 0.5rem;
             text-align: center;
+            color: white;
+            text-shadow: 3px 3px var(--neon-pink), -3px -3px var(--neon-blue);
         }
         @keyframes text-vibrate {
-            0% { transform: translate(0); text-shadow: 2px 2px var(--accent-color), -2px -2px var(--glitch-color); }
-            50% { transform: translate(1px, -1px); text-shadow: -2px -2px var(--accent-color), 2px 2px var(--glitch-color); }
+            0% { transform: translate(0); text-shadow: 2px 2px var(--neon-pink), -2px -2px var(--neon-blue); }
+            50% { transform: translate(1px, -1px); text-shadow: -2px -2px var(--neon-pink), 2px 2px var(--neon-blue); }
             100% { transform: translate(0); }
         }
 
         .trash-btn-wrapper {
             position: relative; width: clamp(200px, 60vw, 280px); height: clamp(200px, 60vw, 280px);
             margin: 1rem 0;
-        }
-        #btn, .extra-btn {
-            position: absolute; width: 100%; height: 100%; background: var(--accent-color);
-            border: none; color: white; font-family: var(--main-font); font-size: 1.3rem;
-            font-weight: 900; cursor: pointer; clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
-            box-shadow: 10px 10px 0 var(--glitch-color), -10px -10px 0 #003cff;
-            animation: btn-insane 0.3s infinite;
-            z-index: 10;
+            display: flex; align-items: center; justify-content: center;
         }
         
+        /* Circular Glowing Border */
+        .btn-glow {
+            position: absolute; width: 110%; height: 110%;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            background: linear-gradient(var(--bg-color), var(--bg-color)) padding-box,
+                        linear-gradient(45deg, var(--neon-blue), var(--neon-pink), var(--neon-purple), var(--neon-orange)) border-box;
+            animation: rotate-glow 4s linear infinite;
+            z-index: 1;
+        }
+        @keyframes rotate-glow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        #btn, .extra-btn {
+            position: absolute; width: 100%; height: 100%; background: transparent;
+            border: none; color: white; font-family: var(--main-font); font-size: 1.3rem;
+            font-weight: 900; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10;
+            text-shadow: 0 0 10px white;
+        }
+        
+        #btn::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
+            z-index: -1;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
         .extra-btn {
             width: 150px; height: 150px;
             font-size: 0.9rem;
             animation: btn-insane 0.5s infinite;
         }
+        .extra-btn::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 0, 255, 0.1);
+            clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
+            z-index: -1;
+            border: 2px solid var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
 
         #btn.glitch-active {
-            background: #fff !important;
             color: #000 !important;
             animation: btn-glitch-warning 0.05s infinite !important;
-            box-shadow: 0 0 50px #fff, 0 0 20px var(--accent-color);
+        }
+        #btn.glitch-active::after {
+            background: #fff !important;
+            box-shadow: 0 0 50px #fff, 0 0 20px var(--neon-pink);
         }
 
         @keyframes btn-glitch-warning {
@@ -148,7 +207,7 @@
 
         @keyframes btn-insane {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); background: var(--glitch-color); color: black; clip-path: polygon(0 0, 100% 15%, 100% 100%, 0 85%); }
+            50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
 
@@ -158,14 +217,16 @@
         }
         #score {
             font-size: clamp(1.2rem, 6vw, 2rem); font-family: var(--mono-font);
-            color: var(--glitch-color); text-shadow: 0 0 10px var(--glitch-color);
-            background: black; padding: 10px 20px; border: 2px solid white;
+            color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue);
+            background: rgba(0, 0, 0, 0.8); padding: 10px 20px; border: 2px solid var(--neon-purple);
             z-index: 10; position: relative; overflow: hidden;
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
         }
         #score.erasing {
             animation: score-shake 0.1s infinite;
             color: #ff0000;
             border-color: #ff0000;
+            text-shadow: 0 0 15px #ff0000;
         }
         @keyframes score-shake {
             0% { transform: translate(2px, 2px); }
@@ -174,10 +235,10 @@
         }
 
         #combo {
-            font-size: 1.2rem; color: var(--accent-color); font-weight: 900;
+            font-size: 1.2rem; color: var(--neon-pink); font-weight: 900;
             margin-top: 15px;
             opacity: 0; transition: transform 0.1s ease-out, opacity 0.2s;
-            text-shadow: 2px 2px 0 black;
+            text-shadow: 0 0 10px var(--neon-pink);
             pointer-events: none;
         }
 
@@ -191,62 +252,57 @@
             color: white; text-transform: uppercase; cursor: pointer; position: relative;
             padding: 10px 5px;
             white-space: nowrap;
-            -webkit-user-select: none;
-            user-select: none;
+            transition: 0.2s;
         }
         .nav-item:active {
-            color: var(--glitch-color);
-            text-shadow: 0 0 10px var(--glitch-color);
+            color: var(--neon-blue);
+            text-shadow: 0 0 15px var(--neon-blue);
             transform: scale(0.95);
         }
 
-        .data-block { position: absolute; background: var(--glitch-color); width: 40px; height: 10px; opacity: 0.6; pointer-events: none; z-index: 2; }
+        .data-block { position: absolute; width: 40px; height: 10px; opacity: 0.6; pointer-events: none; z-index: 2; }
         
         .hit-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            background: radial-gradient(circle at center, rgba(0, 255, 255, 0.2) 0%, rgba(255, 0, 255, 0.1) 50%, rgba(0,0,0,0) 80%);
             pointer-events: none; z-index: 2000; opacity: 0; 
         }
-        .flash { animation: flash-anim 0.15s ease-out; }
+        .flash { animation: flash-anim 0.2s ease-out; }
         @keyframes flash-anim { 0% { opacity: 1; } 100% { opacity: 0; } }
 
         .punishment-active {
             animation: screen-chaos 0.1s infinite !important;
-            filter: hue-rotate(90deg) contrast(300%) !important;
+            filter: hue-rotate(270deg) contrast(300%) !important;
         }
 
         @keyframes screen-chaos {
-            0% { transform: translate(10px, 10px) rotate(5deg) scale(1.2); clip-path: inset(10% 0 40% 0); }
-            20% { transform: translate(-10px, -20px) rotate(-5deg) scale(0.8); clip-path: inset(30% 0 20% 0); }
-            40% { transform: translate(20px, 5px) skew(20deg) scale(1.5); filter: invert(1); }
-            60% { transform: translate(-20px, 15px) rotate(180deg) scale(0.5); clip-path: inset(0 20% 0 30%); }
-            80% { transform: translate(5px, -10px) skew(-20deg) scale(1.1); filter: sepia(1); }
-            100% { transform: translate(0, 0) rotate(360deg) scale(1); }
+            0% { transform: translate(10px, 10px) rotate(2deg) scale(1.1); clip-path: inset(5% 0 35% 0); }
+            20% { transform: translate(-10px, -15px) rotate(-2deg) scale(0.9); clip-path: inset(25% 0 15% 0); }
+            40% { transform: translate(15px, 5px) skew(15deg) scale(1.3); filter: invert(0.8); }
+            60% { transform: translate(-15px, 10px) rotate(90deg) scale(0.7); clip-path: inset(0 15% 0 25%); }
+            80% { transform: translate(5px, -5px) skew(-15deg) scale(1.05); filter: sepia(0.5); }
+            100% { transform: translate(0, 0) rotate(180deg) scale(1); }
         }
 
         .pixel-destruction {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 3000; display: none;
             background: url('https://media.giphy.com/media/oEI9uWUznW3D2/giphy.gif');
-            opacity: 0.3;
-            mix-blend-mode: overlay;
+            opacity: 0.4;
+            mix-blend-mode: screen;
+            filter: hue-rotate(280deg) saturate(2);
         }
 
         #decay-timer {
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-            font-size: 5rem; color: #ff0000; font-family: var(--mono-font);
-            z-index: 3100; display: none; text-shadow: 0 0 20px #ff0000;
+            font-size: 5rem; color: var(--neon-pink); font-family: var(--mono-font);
+            z-index: 3100; display: none; text-shadow: 0 0 20px var(--neon-pink);
             animation: timer-pulse 0.5s infinite;
-        }
-        @keyframes timer-pulse {
-            0% { transform: translateX(-50%) scale(1); opacity: 1; }
-            50% { transform: translateX(-50%) scale(1.2); opacity: 0.5; }
-            100% { transform: translateX(-50%) scale(1); opacity: 1; }
         }
 
         .top-shroud {
             position: fixed; top: 0; left: 0; width: 100%; height: 100px;
-            background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0) 100%);
             z-index: 1050; pointer-events: none;
         }
 
@@ -254,6 +310,7 @@
 </head>
 <body class="crt">
 
+<div class="stars-container" id="stars"></div>
 <div class="top-shroud"></div>
 <div class="noise-bg"></div>
 <div class="hit-overlay" id="flash"></div>
@@ -268,7 +325,7 @@
     <h2 id="settings-title">SETTINGS</h2>
     <button class="lang-btn" onclick="setLang('en')">ENGLISH</button>
     <button class="lang-btn" onclick="setLang('ru')">РУССКИЙ</button>
-    <button id="close-btn" class="lang-btn" style="border-color: var(--accent-color); color: var(--accent-color);" onclick="toggleSettings()">CLOSE</button>
+    <button id="close-btn" class="lang-btn" style="border-color: var(--neon-pink); color: var(--neon-pink);" onclick="toggleSettings()">CLOSE</button>
 </div>
 
 <div id="rank-menu">
@@ -276,19 +333,20 @@
     <div class="rank-list" id="rank-list">
         <div class="rank-item">LOADING...</div>
     </div>
-    <button class="lang-btn" style="border-color: var(--accent-color); color: var(--accent-color);" onclick="toggleRank()">CLOSE</button>
+    <button class="lang-btn" style="border-color: var(--neon-pink); color: var(--neon-pink);" onclick="toggleRank()">CLOSE</button>
 </div>
 
 <div class="main-content" id="content">
-    <h1 id="title">SYSTEM DESTRUCTION</h1>
+    <h1 id="title">GLITCH COSMOS</h1>
     <div class="trash-btn-wrapper" id="btn-container">
-        <button id="btn">DO NOT TOUCH</button>
+        <div class="btn-glow"></div>
+        <button id="btn">ENGAGE CORE</button>
     </div>
     <div id="score-container">
         <div id="score">CHAOS: 0</div>
         <div id="combo">COMBO X1</div>
     </div>
-    <div id="user-display" style="margin-top: 15px; font-family: var(--mono-font); color: var(--glitch-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7;">USER: UNKNOWN</div>
+    <div id="user-display" style="margin-top: 15px; font-family: var(--mono-font); color: var(--neon-blue); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; text-shadow: 0 0 5px var(--neon-blue);">USER: UNKNOWN</div>
 </div>
 
 <nav class="nav-bar">
@@ -326,6 +384,26 @@
 
     const AdController = window.Adsgram.init({ blockId: "34799", debug: true });
 
+    // Create Stars
+    const starsContainer = document.getElementById('stars');
+    for (let i = 0; i < 150; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 3;
+        star.style.width = size + 'px';
+        star.style.height = size + 'px';
+        star.style.left = Math.random() * 100 + 'vw';
+        star.style.top = Math.random() * 100 + 'vh';
+        star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+        
+        // Random star colors from palette
+        const colors = ['#ffffff', '#00ffff', '#ff00ff', '#ffaa00'];
+        star.style.background = colors[Math.floor(Math.random() * colors.length)];
+        star.style.boxShadow = `0 0 ${size*2}px ${star.style.background}`;
+        
+        starsContainer.appendChild(star);
+    }
+
     // State
     let score = 0;
     let currentLang = 'en';
@@ -345,26 +423,26 @@
 
     const translations = {
         en: {
-            title: "SYSTEM DESTRUCTION",
-            btn: "DO NOT TOUCH",
+            title: "GLITCH COSMOS",
+            btn: "ENGAGE CORE",
             score: "CHAOS: ",
-            erasing: "ERASING...",
+            erasing: "CORRUPTING...",
             settings: "SETTINGS",
             rank: "TOP CHAOS",
-            triple: "PRESS ALL!",
-            decay: "FIX SYSTEM!",
-            trash: ["CRITICAL ERROR", "CORE BREACH", "ACCESS DENIED", "SYSTEM FAILURE", "OVERLOAD"]
+            triple: "SYNC ALL!",
+            decay: "STABILIZE!",
+            trash: ["NEBULA ERROR", "STAR BREACH", "VOID ACCESS", "PULSAR FAILURE", "OVERLOAD"]
         },
         ru: {
-            title: "РАЗРУШЕНИЕ СИСТЕМЫ",
-            btn: "НЕ ТРОГАТЬ",
+            title: "ГЛИТЧ КОСМОС",
+            btn: "ЗАПУСК ЯДРА",
             score: "ХАОС: ",
-            erasing: "УДАЛЕНИЕ...",
+            erasing: "ИСКАЖЕНИЕ...",
             settings: "НАСТРОЙКИ",
             rank: "ТОП ХАОСА",
-            triple: "ЖМИ ВСЕ!",
-            decay: "ЧИНИ СИСТЕМУ!",
-            trash: ["КРИТИЧЕСКАЯ ОШИБКА", "РАЗРЫВ ЯДРА", "ОТКАЗАНО В ДОСТУПЕ", "СБОЙ СИСТЕМЫ", "ПЕРЕГРУЗКА"]
+            triple: "СИНХРОНИЗАЦИЯ!",
+            decay: "СТАБИЛИЗАЦИЯ!",
+            trash: ["ОШИБКА ТУМАННОСТИ", "РАЗРЫВ ЗВЕЗДЫ", "ПУСТОТА", "СБОЙ ПУЛЬСАРА", "ПЕРЕГРУЗКА"]
         }
     };
 
@@ -448,7 +526,8 @@
         block.className = "data-block";
         block.style.left = Math.random() * 100 + "vw";
         block.style.top = Math.random() * 100 + "vh";
-        block.style.backgroundColor = color || (Math.random() > 0.5 ? "var(--glitch-color)" : "var(--accent-color)");
+        block.style.backgroundColor = color || (Math.random() > 0.5 ? "var(--neon-blue)" : "var(--neon-pink)");
+        block.style.boxShadow = `0 0 10px ${block.style.backgroundColor}`;
         document.body.appendChild(block);
         setTimeout(() => block.remove(), 500);
     }
@@ -463,11 +542,11 @@
             
             const rand = Math.random();
             if (rand < 0.4) {
-                activateGlitch(); // Original glitch
+                activateGlitch();
             } else if (rand < 0.7) {
-                startTripleEvent(); // New Triple Button
+                startTripleEvent();
             } else {
-                startDecayEvent(); // New Pixel Decay
+                startDecayEvent();
             }
         }, delay);
     }
@@ -475,7 +554,7 @@
     function activateGlitch() {
         isGlitchActive = true;
         btn.classList.add("glitch-active");
-        btn.innerText = "!!! ERROR !!!";
+        btn.innerText = "!!! VOID !!!";
         setTimeout(deactivateGlitch, Math.random() * 1500 + 500);
     }
 
@@ -488,20 +567,16 @@
         }
     }
 
-    // --- NEW MECHANICS ---
-
     function startTripleEvent() {
         isTripleActive = true;
         buttonsToClick = 3;
         updateUI();
 
-        // Create 2 extra buttons
         for (let i = 0; i < 2; i++) {
             const extra = document.createElement("button");
             extra.className = "extra-btn";
             extra.innerText = translations[currentLang].triple;
             
-            // Random position
             const x = Math.random() * (window.innerWidth - 150);
             const y = Math.random() * (window.innerHeight - 150);
             extra.style.left = x + "px";
@@ -512,15 +587,13 @@
                 extra.remove();
                 buttonsToClick--;
                 checkTripleComplete();
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             });
             document.body.appendChild(extra);
         }
     }
 
     function checkTripleComplete() {
-        if (buttonsToClick <= 1) { // Main button is the last one or already clicked
-            // We'll handle the main button click in triggerAction
-        }
         if (buttonsToClick === 0) {
             isTripleActive = false;
             updateUI();
@@ -552,7 +625,6 @@
         decayTimerEl.style.display = "none";
         pixelOverlay.style.display = "none";
         
-        // Penalty: -30%
         const penalty = Math.floor(score * 0.3);
         score -= penalty;
         if (score < 0) score = 0;
@@ -573,14 +645,11 @@
         
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         
-        // Reward for fixing?
         score += 50;
         saveToFirebase();
         updateUI();
         startGlitchCycle();
     }
-
-    // --- END NEW MECHANICS ---
 
     function triggerPunishment() {
         if (isPunishing) return;
@@ -610,9 +679,9 @@
         pixelOverlay.style.opacity = "0.5";
         
         const chaosInterval = setInterval(() => {
-            spawnDataBlock("#ff0000");
-            spawnDataBlock("#ffffff");
-            spawnDataBlock("#0000ff");
+            spawnDataBlock("#ff00ff");
+            spawnDataBlock("#00ffff");
+            spawnDataBlock("#ffaa00");
         }, 30);
 
         setTimeout(() => {
@@ -641,9 +710,9 @@
         if (isTripleActive) {
             buttonsToClick--;
             checkTripleComplete();
-            // Don't add score yet or add small amount
             score += 1;
             updateUI();
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             return;
         }
 
