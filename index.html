@@ -322,7 +322,7 @@
 <!-- Firebase SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+    import { getDatabase, ref, set, get, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDat3B7qhTuYy0f8m2X2fhHjq25rnfOyOs",
@@ -388,8 +388,8 @@
     const rankMenu = document.getElementById("rank-menu");
     const validationOverlay = document.getElementById("validationOverlay");
 
-    // TELEGRAM VALIDATION
-    async function validateTelegram() {
+    // TELEGRAM VALIDATION & LOAD DATA
+    async function initGame() {
         try {
             const initData = tg.initData;
             
@@ -414,21 +414,29 @@
             if (data.valid && data.user) {
                 userId = data.user.id;
                 userDisplay.innerText = `USER: ${data.user.username || data.user.first_name || userId}`;
-                console.log("Telegram validation successful:", data.user);
+                
+                // LOAD SCORE FROM FIREBASE
+                const userRef = ref(db, `users/${userId}`);
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    score = userData.score || 0;
+                    updateUI();
+                }
             } else {
                 console.error("Validation failed:", data);
                 userDisplay.innerText = "USER: VALIDATION FAILED";
             }
         } catch (e) {
-            console.error("Validation error:", e);
+            console.error("Init error:", e);
             userDisplay.innerText = "USER: ERROR";
         } finally {
             validationOverlay.classList.add("hidden");
         }
     }
 
-    // Call validation on load
-    validateTelegram();
+    // Call init on load
+    initGame();
 
     function toggleSettings() {
         settingsMenu.classList.toggle("open");
@@ -445,7 +453,9 @@
 
     function updateUI() {
         titleEl.innerText = translations[currentLang].title;
-        btn.innerText = translations[currentLang].btn;
+        if (!isGlitchActive && !isPunishing) {
+            btn.innerText = translations[currentLang].btn;
+        }
         scoreEl.innerText = translations[currentLang].score + score;
         document.getElementById("settings-title").innerText = currentLang === 'en' ? 'SETTINGS' : 'НАСТРОЙКИ';
         document.getElementById("rank-title").innerText = currentLang === 'en' ? 'TOP CHAOS' : 'ТОП ХАОСА';
@@ -453,11 +463,11 @@
     }
 
     function saveToFirebase() {
+        if (userId === "guest") return;
         const userRef = ref(db, `users/${userId}`);
         set(userRef, {
             id: userId,
             score: score,
-            combo: combo,
             last_updated: new Date().toISOString()
         }).catch(e => console.error("Firebase save error:", e));
     }
@@ -480,6 +490,13 @@
                 btn.classList.add("glitch-active");
                 btn.innerText = "DANGER!";
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                
+                // Auto deactivate after 2 seconds if not touched
+                setTimeout(() => {
+                    if (isGlitchActive) {
+                        deactivateGlitch();
+                    }
+                }, 2000);
             }
             startGlitchCycle();
         }, glitchDelay);
