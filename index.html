@@ -121,6 +121,7 @@
             font-weight: 900; cursor: pointer; clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
             box-shadow: 10px 10px 0 var(--glitch-color), -10px -10px 0 #003cff;
             animation: btn-insane 0.3s infinite;
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
         }
         
         #btn.glitch-active {
@@ -128,6 +129,13 @@
             color: #000 !important;
             animation: btn-glitch-warning 0.05s infinite !important;
             box-shadow: 0 0 50px #fff, 0 0 20px var(--accent-color);
+        }
+
+        #btn.normal {
+            background: var(--glitch-color) !important;
+            color: #000 !important;
+            animation: btn-insane 0.3s infinite !important;
+            box-shadow: 10px 10px 0 var(--accent-color), -10px -10px 0 #003cff !important;
         }
 
         @keyframes btn-glitch-warning {
@@ -357,6 +365,7 @@
     let isGlitchActive = false;
     let isPunishing = false;
     let userId = "guest";
+    let glitchCycleTimeout = null;
 
     // Translations
     const translations = {
@@ -478,11 +487,15 @@
     }
 
     function startGlitchCycle() {
+        // Clear any existing timeout
+        if (glitchCycleTimeout) clearTimeout(glitchCycleTimeout);
+        
         const glitchDelay = 5000 + Math.random() * 5000;
-        setTimeout(() => {
+        glitchCycleTimeout = setTimeout(() => {
             if (!isPunishing && !isGlitchActive) {
                 isGlitchActive = true;
                 btn.classList.add("glitch-active");
+                btn.classList.remove("normal");
                 btn.innerText = "DANGER!";
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
                 
@@ -510,6 +523,7 @@
         
         // INSTANTLY RESET BUTTON STATE
         btn.classList.remove("glitch-active");
+        btn.classList.remove("normal");
         btn.innerText = translations[currentLang].btn;
 
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
@@ -540,6 +554,7 @@
             spawnDataBlock("#0000ff");
         }, 30);
 
+        // ИСПРАВЛЕНИЕ: Сразу же после наказания показываем зеленую кнопку
         setTimeout(() => {
             clearInterval(chaosInterval);
             isPunishing = false;
@@ -550,7 +565,15 @@
             scoreEl.classList.remove("erasing");
             pixelOverlay.style.display = "none";
             updateUI();
-            startGlitchCycle();
+            
+            // Показываем кнопку зеленой (DO NOT TOUCH)
+            btn.classList.add("normal");
+            btn.innerText = translations[currentLang].btn;
+            
+            // Через 2 секунды серая кнопка (DANGER) появится снова
+            setTimeout(() => {
+                startGlitchCycle();
+            }, 2000);
         }, 2000);
     }
 
