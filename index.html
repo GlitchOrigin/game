@@ -300,251 +300,239 @@
 </nav>
 
 <script>
-    // ===== CONFIGURATION =====
-    // Change this to your server URL
-    const SERVER_URL = "https://server-ieki.onrender.com";
+    // Define your server URL here
+    const SERVER_URL = "http://127.0.0.1:5000"; // IMPORTANT: Change this to your actual server URL in production
 
-    // Translations
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.isVerticalSwipesEnabled = false;
+    tg.enableClosingConfirmation();
+    tg.setHeaderColor('#000000');
+    tg.setBackgroundColor('#000000');
+
+    const AdController = window.Adsgram.init({ blockId: "34799", debug: true });
+
+    // State
+    let score = 0;
+    let currentLang = 'en';
+    let combo = 0;
+    let comboTimer;
+    let isGlitchActive = false;
+    let isPunishing = false;
+    let userId = "guest";
+    let userName = "Unknown User";
+    
+    // New Mechanics State
+    let isTripleActive = false;
+    let buttonsToClick = 0;
+    let isDecayActive = false;
+    let decayTimeLeft = 5.0;
+    let decayInterval;
+
     const translations = {
         en: {
             title: "SYSTEM DESTRUCTION",
+            btn: "DO NOT TOUCH",
             score: "CHAOS: ",
-            erasing: "ERASING",
-            trash: ["TRASH", "JUNK", "DEBRIS", "WASTE", "GARBAGE", "RUBBISH"],
-            triple: "TRIPLE CLICK",
+            erasing: "ERASING...",
             settings: "SETTINGS",
-            close: "CLOSE",
-            topChaos: "TOP CHAOS",
-            play: "PLAY",
-            quests: "QUESTS",
-            shop: "SHOP",
-            rank: "RANK",
-            ads: "ADS"
+            rank: "TOP CHAOS",
+            triple: "PRESS ALL!",
+            decay: "FIX SYSTEM!",
+            trash: ["CRITICAL ERROR", "CORE BREACH", "ACCESS DENIED", "SYSTEM FAILURE", "OVERLOAD"]
         },
         ru: {
             title: "РАЗРУШЕНИЕ СИСТЕМЫ",
+            btn: "НЕ ТРОГАТЬ",
             score: "ХАОС: ",
-            erasing: "СТИРАНИЕ",
-            trash: ["МУСОР", "ХЛАМ", "ОБЛОМКИ", "ОТХОДЫ", "БАРАХЛО", "ТРЯПЬЕ"],
-            triple: "ТРОЙНОЙ КЛИК",
+            erasing: "УДАЛЕНИЕ...",
             settings: "НАСТРОЙКИ",
-            close: "ЗАКРЫТЬ",
-            topChaos: "ТОП ХАОСА",
-            play: "ИГРАТЬ",
-            quests: "КВЕСТЫ",
-            shop: "МАГАЗИН",
-            rank: "РЕЙТИНГ",
-            ads: "РЕКЛАМА"
+            rank: "ТОП ХАОСА",
+            triple: "ЖМИ ВСЕ!",
+            decay: "ЧИНИ СИСТЕМУ!",
+            trash: ["КРИТИЧЕСКАЯ ОШИБКА", "РАЗРЫВ ЯДРА", "ОТКАЗАНО В ДОСТУПЕ", "СБОЙ СИСТЕМЫ", "ПЕРЕГРУЗКА"]
         }
     };
 
-    // ===== STATE VARIABLES =====
-    let score = 0;
-    let combo = 0;
-    let currentLang = "en";
-    let isPunishing = false;
-    let isGlitchActive = false;
-    let isTripleActive = false;
-    let isDecayActive = false;
-    let buttonsToClick = 0;
-    let decayTimeLeft = 5;
-    let decayInterval = null;
-    let comboTimer = null;
-    let glitchCycleTimeout = null;
-
-    // ===== DOM ELEMENTS =====
     const btn = document.getElementById("btn");
+    const btnContainer = document.getElementById("btn-container");
     const scoreEl = document.getElementById("score");
     const comboEl = document.getElementById("combo");
     const titleEl = document.getElementById("title");
+    const settingsMenu = document.getElementById("settings-menu");
+    const rankMenu = document.getElementById("rank-menu");
     const flash = document.getElementById("flash");
     const pixelOverlay = document.getElementById("pixels");
     const decayTimerEl = document.getElementById("decay-timer");
-    const settingsMenu = document.getElementById("settings-menu");
-    const rankMenu = document.getElementById("rank-menu");
-    const rankList = document.getElementById("rank-list");
-    const userDisplay = document.getElementById("user-display");
 
-    // ===== TELEGRAM SETUP =====
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready();
+    // --- API Calls to Flask Server ---
 
-    // ===== INITIALIZATION =====
-    async function initializeApp() {
+    async function validateUserOnServer() {
+        if (!tg.initData) {
+            console.error("Telegram initData is not available.");
+            tg.showAlert("Error: Telegram initData not found. Please open from Telegram.");
+            return;
+        }
+
         try {
-            // Validate user with server
-            const initData = tg.initData;
             const response = await fetch(`${SERVER_URL}/validate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ initData: initData })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ initData: tg.initData })
             });
+            const result = await response.json();
 
-            const data = await response.json();
-
-            if (data.valid && data.user) {
-                // Store user info in localStorage
-                localStorage.setItem("user_id", data.user.id);
-                localStorage.setItem("username", data.user.username);
-                localStorage.setItem("first_name", data.user.first_name);
-                localStorage.setItem("last_name", data.user.last_name);
-                
-                updateUserDisplay();
-                loadUserScore();
+            if (result.ok && result.valid) {
+                userId = result.user.id.toString();
+                userName = result.user.username || result.user.first_name || `User_${userId.slice(-4)}`;
+                document.getElementById("user-display").innerText = `USER: ${userName}`;
+                console.log("User validated and data received:", result.user);
+                // Optionally fetch initial score here if needed, or rely on saveScoreToServer to update it
             } else {
-                tg.showAlert("Validation failed!");
+                console.error("Validation failed:", result.error);
+                tg.showAlert(`Validation failed: ${result.error || 'Unknown error'}`);
             }
-        } catch (e) {
-            console.error("Initialization error:", e);
-            tg.showAlert("Error: " + e.message);
+        } catch (error) {
+            console.error("Error validating user with server:", error);
+            tg.showAlert("Network error during validation. Please try again.");
         }
     }
 
-    function updateUserDisplay() {
-        const username = localStorage.getItem("username") || "UNKNOWN";
-        const firstName = localStorage.getItem("first_name") || "";
-        const displayName = username || firstName || "UNKNOWN";
-        userDisplay.innerText = `USER: ${displayName.toUpperCase()}`;
-    }
+    async function saveScoreToServer() {
+        if (userId === "guest" || !tg.initData) return;
 
-    async function loadUserScore() {
         try {
-            const userId = localStorage.getItem("user_id");
-            // Load score from server if available
-            // For now, we'll start with 0
-            score = 0;
-            updateUI();
-        } catch (e) {
-            console.error("Error loading score:", e);
-        }
-    }
-
-    // ===== SAVE SCORE TO SERVER =====
-    async function saveToServer() {
-        try {
-            const userId = localStorage.getItem("user_id");
-            const username = localStorage.getItem("username") || "";
-            const firstName = localStorage.getItem("first_name") || "";
-            const lastName = localStorage.getItem("last_name") || "";
-
-            if (!userId) return;
-
-            await fetch(`${SERVER_URL}/save_score`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: userId,
-                    score: score,
-                    username: username,
-                    first_name: firstName,
-                    last_name: lastName
-                })
+            const response = await fetch(`${SERVER_URL}/save_score`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ initData: tg.initData, score: score })
             });
-        } catch (e) {
-            console.error("Error saving score:", e);
+            const result = await response.json();
+
+            if (result.ok) {
+                console.log("Score saved successfully:", result.message);
+            } else {
+                console.error("Failed to save score:", result.error);
+                // tg.showAlert(`Failed to save score: ${result.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error("Error saving score to server:", error);
+            // tg.showAlert("Network error saving score. Please try again.");
         }
     }
 
-    // ===== LEADERBOARD =====
     async function loadLeaderboard() {
         try {
-            const response = await fetch(`${SERVER_URL}/leaderboard`);
-            const data = await response.json();
+            const response = await fetch(`${SERVER_URL}/get_leaderboard`);
+            const result = await response.json();
 
-            if (data.ok && data.leaderboard) {
-                const currentUserId = localStorage.getItem("user_id");
-                rankList.innerHTML = "";
+            const listEl = document.getElementById("rank-list");
+            listEl.innerHTML = ""; // Clear existing list
 
-                data.leaderboard.forEach((user, index) => {
-                    const rankItem = document.createElement("div");
-                    rankItem.className = "rank-item";
-                    if (user.id === currentUserId) {
-                        rankItem.classList.add("current-user");
-                    }
-
-                    const displayName = user.username || user.first_name || "Unknown";
-                    rankItem.innerHTML = `
-                        <span class="rank-pos">#${index + 1}</span>
-                        <span class="rank-name">${displayName}</span>
-                        <span class="rank-score">${user.score}</span>
-                    `;
-                    rankList.appendChild(rankItem);
+            if (result.ok && result.leaderboard) {
+                result.leaderboard.forEach((user, index) => {
+                    const item = document.createElement("div");
+                    item.className = "rank-item" + (user.id === userId ? " current-user" : "");
+                    item.innerHTML = `<span class="rank-pos">#${index + 1}</span><span class="rank-name">${user.name}</span><span class="rank-score">${user.score}</span>`;
+                    listEl.appendChild(item);
                 });
+            } else {
+                console.error("Failed to load leaderboard:", result.error);
+                listEl.innerHTML = `<div class="rank-item">Error loading leaderboard: ${result.error || 'Unknown error'}</div>`;
             }
-        } catch (e) {
-            console.error("Error loading leaderboard:", e);
-            rankList.innerHTML = `<div class="rank-item">ERROR LOADING</div>`;
+        } catch (error) {
+            console.error("Network error loading leaderboard:", error);
+            const listEl = document.getElementById("rank-list");
+            listEl.innerHTML = `<div class="rank-item">Network error loading leaderboard.</div>`;
         }
     }
 
-    // ===== UI FUNCTIONS =====
+    // --- Original Game Logic (modified to use server API) ---
+
     function updateUI() {
         scoreEl.innerText = translations[currentLang].score + score;
+        titleEl.innerText = isDecayActive ? translations[currentLang].decay : (isTripleActive ? translations[currentLang].triple : translations[currentLang].title);
+        btn.innerText = isDecayActive ? translations[currentLang].decay : (isTripleLang.triple : translations[currentLang].btn);
     }
 
-    function setLang(lang) {
+    window.setLang = (lang) => {
         currentLang = lang;
-        titleEl.innerText = translations[currentLang].title;
         updateUI();
-    }
+        document.getElementById("settings-title").innerText = translations[lang].settings;
+        document.getElementById("rank-title").innerText = translations[lang].rank;
+        document.getElementById("close-btn").innerText = lang === 'ru' ? 'ЗАКРЫТЬ' : 'CLOSE';
+        toggleSettings();
+    };
 
-    function toggleSettings() {
-        settingsMenu.classList.toggle("open");
-    }
-
-    function toggleRank() {
+    window.toggleSettings = () => settingsMenu.classList.toggle("open");
+    window.toggleRank = () => {
         rankMenu.classList.toggle("open");
-        if (rankMenu.classList.contains("open")) {
-            loadLeaderboard();
-        }
-    }
+        if (rankMenu.classList.contains("open")) loadLeaderboard();
+    };
 
-    // ===== GLITCH MECHANICS =====
-    function spawnDataBlock(color = null) {
+    function spawnDataBlock(color) {
         const block = document.createElement("div");
         block.className = "data-block";
-        if (color) block.style.background = color;
-        block.style.left = Math.random() * window.innerWidth + "px";
-        block.style.top = Math.random() * window.innerHeight + "px";
+        block.style.left = Math.random() * 100 + "vw";
+        block.style.top = Math.random() * 100 + "vh";
+        block.style.backgroundColor = color || (Math.random() > 0.5 ? "var(--glitch-color)" : "var(--accent-color)");
         document.body.appendChild(block);
-        setTimeout(() => block.remove(), 200);
+        setTimeout(() => block.remove(), 500);
     }
 
     function startGlitchCycle() {
-        const glitchChance = Math.random();
-        let delay = 3000 + Math.random() * 4000;
+        const delay = Math.random() * 5000 + 3000;
+        setTimeout(() => {
+            if (isPunishing || isDecayActive || isTripleActive) {
+                startGlitchCycle();
+                return;
+            }
+            
+            const rand = Math.random();
+            if (rand < 0.4) {
+                activateGlitch(); // Original glitch
+            } else if (rand < 0.7) {
+                startTripleEvent(); // New Triple Button
+            } else {
+                startDecayEvent(); // New Pixel Decay
+            }
+        }, delay);
+    }
 
-        if (glitchChance < 0.3) {
-            delay = 2000 + Math.random() * 2000;
-            glitchCycleTimeout = setTimeout(() => {
-                isGlitchActive = true;
-                btn.classList.add("glitch-active");
-                updateUI();
-            }, delay);
-        } else if (glitchChance < 0.6) {
-            delay = 2500 + Math.random() * 3000;
-            glitchCycleTimeout = setTimeout(() => {
-                startTripleEvent();
-            }, delay);
-        } else {
-            delay = 3000 + Math.random() * 4000;
-            glitchCycleTimeout = setTimeout(() => {
-                startDecayEvent();
-            }, delay);
+    function activateGlitch() {
+        isGlitchActive = true;
+        btn.classList.add("glitch-active");
+        btn.innerText = "!!! DANGER !!!";
+        setTimeout(deactivateGlitch, Math.random() * 1500 + 500);
+    }
+
+    function deactivateGlitch() {
+        isGlitchActive = false;
+        btn.classList.remove("glitch-active");
+        if (!isPunishing && !isDecayActive && !isTripleActive) {
+            btn.innerText = translations[currentLang].btn;
+            startGlitchCycle();
         }
     }
+
+    // --- NEW MECHANICS ---
 
     function startTripleEvent() {
         isTripleActive = true;
         buttonsToClick = 3;
         updateUI();
 
+        // Create 2 extra buttons
         for (let i = 0; i < 2; i++) {
             const extra = document.createElement("button");
             extra.className = "extra-btn";
             extra.innerText = translations[currentLang].triple;
             
+            // Random position
             const x = Math.random() * (window.innerWidth - 150);
             const y = Math.random() * (window.innerHeight - 150);
             extra.style.left = x + "px";
@@ -561,6 +549,9 @@
     }
 
     function checkTripleComplete() {
+        if (buttonsToClick <= 1) { // Main button is the last one or already clicked
+            // We'll handle the main button click in triggerAction
+        }
         if (buttonsToClick === 0) {
             isTripleActive = false;
             updateUI();
@@ -592,6 +583,7 @@
         decayTimerEl.style.display = "none";
         pixelOverlay.style.display = "none";
         
+        // Penalty: -30%
         const penalty = Math.floor(score * 0.3);
         score -= penalty;
         if (score < 0) score = 0;
@@ -599,7 +591,7 @@
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
         tg.showAlert("SYSTEM CORRUPTED! -30% CHAOS");
         
-        saveToServer();
+        saveScoreToServer(); // Use server API
         updateUI();
         startGlitchCycle();
     }
@@ -612,11 +604,14 @@
         
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         
+        // Reward for fixing?
         score += 50;
-        saveToServer();
+        saveScoreToServer(); // Use server API
         updateUI();
         startGlitchCycle();
     }
+
+    // --- END NEW MECHANICS ---
 
     function triggerPunishment() {
         if (isPunishing) return;
@@ -656,7 +651,7 @@
             isPunishing = false;
             score = 0;
             combo = 0;
-            saveToServer();
+            saveScoreToServer(); // Use server API
             document.body.classList.remove("punishment-active");
             scoreEl.classList.remove("erasing");
             pixelOverlay.style.display = "none";
@@ -665,7 +660,6 @@
         }, 2000);
     }
 
-    // ===== MAIN CLICK HANDLER =====
     const triggerAction = (e) => {
         if (e && e.cancelable) e.preventDefault();
         if (isPunishing) return;
@@ -678,6 +672,7 @@
         if (isTripleActive) {
             buttonsToClick--;
             checkTripleComplete();
+            // Don't add score yet or add small amount
             score += 1;
             updateUI();
             return;
@@ -692,7 +687,7 @@
 
         combo++;
         score += combo;
-        saveToServer();
+        saveScoreToServer(); // Use server API
         scoreEl.innerText = translations[currentLang].score + score;
         
         comboEl.style.opacity = "1";
@@ -719,7 +714,6 @@
 
     btn.addEventListener('pointerdown', triggerAction);
 
-    // ===== NAVIGATION =====
     const navItems = {
         'nav-play': () => { 
             rankMenu.classList.remove("open");
@@ -732,7 +726,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             AdController.show().then((result) => {
                 score += 1000;
-                saveToServer();
+                saveScoreToServer(); // Use server API
                 updateUI();
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 tg.showAlert('REWARD: +1000 CHAOS');
@@ -753,10 +747,11 @@
         }
     });
     
-    // ===== START APP =====
-    initializeApp();
+    // Initial setup
+    validateUserOnServer(); // Validate user on server startup
     updateUI();
     startGlitchCycle();
+    tg.ready();
 </script>
 
 </body>
