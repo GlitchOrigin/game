@@ -2,133 +2,762 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Validation</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GLITCH WORLD - TELEGRAM EDITION</title>
+    <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=JetBrains+Mono:wght@800&display=swap');
+
+        :root {
+            --glitch-color: #00ff00;
+            --accent-color: #ff003c;
+            /* Telegram Pure Black Theme */
+            --bg-color: #000000;
+            --main-font: 'Russo One', sans-serif;
+            --mono-font: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            background: #0a0a0a;
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
             color: white;
-            font-family: Arial, sans-serif;
-            padding: 30px;
+            font-family: var(--main-font);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 100vh; overflow: hidden;
+            user-select: none; -webkit-user-select: none;
+            transition: transform 0.1s;
+        }
+
+        /* CRT Scanlines */
+        .crt::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.06));
+            z-index: 1000; background-size: 100% 3px, 3px 100%; pointer-events: none;
+        }
+
+        .noise-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://media.giphy.com/media/oEI9uWUznW3D2/giphy.gif');
+            opacity: 0.05; pointer-events: none; z-index: 1;
+        }
+
+        #settings-icon {
+            position: fixed; top: 20px; right: 20px; width: 35px; height: 35px;
+            cursor: pointer; z-index: 1100; fill: white; filter: drop-shadow(0 0 5px var(--accent-color));
+        }
+
+        #settings-menu, #rank-menu {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(0, 0, 0, 0.98);
+            padding: 30px; border: 2px solid var(--accent-color);
+            z-index: 1200; transition: 0.2s; text-align: center;
+            width: 90%; max-width: 400px;
+            clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%);
+            box-shadow: 10px 10px 0 var(--glitch-color), -10px -10px 0 var(--accent-color);
+        }
+        #settings-menu.open, #rank-menu.open { transform: translate(-50%, -50%) scale(1); animation: menu-glitch 0.3s infinite; }
+        
+        @keyframes menu-glitch {
+            0% { clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%); }
+            50% { clip-path: polygon(5% 0, 95% 5%, 100% 100%, 0 90%); }
+            100% { clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%); }
+        }
+
+        .lang-btn {
+            background: transparent; color: white; border: 2px solid white;
+            padding: 15px; font-family: var(--main-font); margin: 10px 0;
+            cursor: pointer; font-weight: 900; width: 100%; transition: 0.1s;
+        }
+        .lang-btn:hover { background: var(--accent-color); border-color: var(--glitch-color); transform: skew(-5deg); box-shadow: 5px 5px 0 var(--glitch-color); }
+
+        /* Leaderboard Style */
+        .rank-list {
+            margin: 20px 0; max-height: 300px; overflow-y: auto;
+            text-align: left; font-family: var(--mono-font);
+        }
+        .rank-item {
+            display: flex; justify-content: space-between;
+            padding: 10px; border-bottom: 1px dashed var(--glitch-color);
+            font-size: 0.9rem;
+        }
+        .rank-item.current-user {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid var(--glitch-color);
+            color: var(--glitch-color);
+        }
+        .rank-pos { color: var(--accent-color); margin-right: 10px; }
+        .rank-name { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rank-score { color: var(--glitch-color); margin-left: 10px; }
+
+        .main-content { display: flex; flex-direction: column; align-items: center; z-index: 5; margin-top: -5vh; transition: filter 0.1s; }
+
+        h1 {
+            font-size: clamp(1.2rem, 8vw, 2.5rem); text-transform: uppercase;
+            animation: text-vibrate 0.1s infinite; margin-bottom: 0.5rem;
             text-align: center;
         }
-
-        button {
-            background: #00ff88;
-            border: none;
-            color: black;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
+        @keyframes text-vibrate {
+            0% { transform: translate(0); text-shadow: 2px 2px var(--accent-color), -2px -2px var(--glitch-color); }
+            50% { transform: translate(1px, -1px); text-shadow: -2px -2px var(--accent-color), 2px 2px var(--glitch-color); }
+            100% { transform: translate(0); }
         }
 
-        #result {
-            margin-top: 30px;
-            text-align: left;
-            white-space: pre-wrap;
-            background: #111;
-            padding: 20px;
-            border-radius: 10px;
-            overflow-wrap: break-word;
+        .trash-btn-wrapper {
+            position: relative; width: clamp(200px, 60vw, 280px); height: clamp(200px, 60vw, 280px);
+            margin: 1rem 0;
+        }
+        #btn, .extra-btn {
+            position: absolute; width: 100%; height: 100%; background: var(--accent-color);
+            border: none; color: white; font-family: var(--main-font); font-size: 1.3rem;
+            font-weight: 900; cursor: pointer; clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
+            box-shadow: 10px 10px 0 var(--glitch-color), -10px -10px 0 #003cff;
+            animation: btn-insane 0.3s infinite;
+            z-index: 10;
+        }
+        
+        .extra-btn {
+            width: 150px; height: 150px;
+            font-size: 0.9rem;
+            animation: btn-insane 0.5s infinite;
         }
 
-        .success {
-            color: #00ff88;
+        #btn.glitch-active {
+            background: #fff !important;
+            color: #000 !important;
+            animation: btn-glitch-warning 0.05s infinite !important;
+            box-shadow: 0 0 50px #fff, 0 0 20px var(--accent-color);
         }
 
-        .error {
-            color: #ff4444;
+        @keyframes btn-glitch-warning {
+            0% { transform: translate(5px, 0) skew(10deg); filter: contrast(200%) invert(0); }
+            20% { transform: translate(-5px, 2px) skew(-10deg); filter: contrast(150%) invert(1); }
+            40% { transform: translate(2px, -5px) scale(1.1); }
+            60% { transform: translate(-2px, 5px) rotate(2deg); }
+            80% { transform: translate(0, 0) scale(0.9); }
+            100% { transform: translate(5px, 0); }
         }
+
+        @keyframes btn-insane {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background: var(--glitch-color); color: black; clip-path: polygon(0 0, 100% 15%, 100% 100%, 0 85%); }
+            100% { transform: scale(1); }
+        }
+
+        #score-container { 
+            display: flex; flex-direction: column; align-items: center; 
+            margin-top: 1rem; width: 100%;
+        }
+        #score {
+            font-size: clamp(1.2rem, 6vw, 2rem); font-family: var(--mono-font);
+            color: var(--glitch-color); text-shadow: 0 0 10px var(--glitch-color);
+            background: black; padding: 10px 20px; border: 2px solid white;
+            z-index: 10; position: relative; overflow: hidden;
+        }
+        #score.erasing {
+            animation: score-shake 0.1s infinite;
+            color: #ff0000;
+            border-color: #ff0000;
+        }
+        @keyframes score-shake {
+            0% { transform: translate(2px, 2px); }
+            50% { transform: translate(-2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        #combo {
+            font-size: 1.2rem; color: var(--accent-color); font-weight: 900;
+            margin-top: 15px;
+            opacity: 0; transition: transform 0.1s ease-out, opacity 0.2s;
+            text-shadow: 2px 2px 0 black;
+            pointer-events: none;
+        }
+
+        .nav-bar {
+            position: fixed; bottom: 25px; left: 0; width: 100%;
+            display: flex; justify-content: center; gap: clamp(8px, 2vw, 15px); z-index: 100;
+            padding: 0 10px;
+        }
+        .nav-item {
+            font-family: var(--main-font); font-size: clamp(0.6rem, 2.5vw, 0.8rem);
+            color: white; text-transform: uppercase; cursor: pointer; position: relative;
+            padding: 10px 5px;
+            white-space: nowrap;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .nav-item:active {
+            color: var(--glitch-color);
+            text-shadow: 0 0 10px var(--glitch-color);
+            transform: scale(0.95);
+        }
+
+        .data-block { position: absolute; background: var(--glitch-color); width: 40px; height: 10px; opacity: 0.6; pointer-events: none; z-index: 2; }
+        
+        .hit-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none; z-index: 2000; opacity: 0; 
+        }
+        .flash { animation: flash-anim 0.15s ease-out; }
+        @keyframes flash-anim { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+        .punishment-active {
+            animation: screen-chaos 0.1s infinite !important;
+            filter: hue-rotate(90deg) contrast(300%) !important;
+        }
+
+        @keyframes screen-chaos {
+            0% { transform: translate(10px, 10px) rotate(5deg) scale(1.2); clip-path: inset(10% 0 40% 0); }
+            20% { transform: translate(-10px, -20px) rotate(-5deg) scale(0.8); clip-path: inset(30% 0 20% 0); }
+            40% { transform: translate(20px, 5px) skew(20deg) scale(1.5); filter: invert(1); }
+            60% { transform: translate(-20px, 15px) rotate(180deg) scale(0.5); clip-path: inset(0 20% 0 30%); }
+            80% { transform: translate(5px, -10px) skew(-20deg) scale(1.1); filter: sepia(1); }
+            100% { transform: translate(0, 0) rotate(360deg) scale(1); }
+        }
+
+        .pixel-destruction {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 3000; display: none;
+            background: url('https://media.giphy.com/media/oEI9uWUznW3D2/giphy.gif');
+            opacity: 0.3;
+            mix-blend-mode: overlay;
+        }
+
+        #decay-timer {
+            position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+            font-size: 5rem; color: #ff0000; font-family: var(--mono-font);
+            z-index: 3100; display: none; text-shadow: 0 0 20px #ff0000;
+            animation: timer-pulse 0.5s infinite;
+        }
+        @keyframes timer-pulse {
+            0% { transform: translateX(-50%) scale(1); opacity: 1; }
+            50% { transform: translateX(-50%) scale(1.2); opacity: 0.5; }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+
+        .top-shroud {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100px;
+            background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+            z-index: 1050; pointer-events: none;
+        }
+
     </style>
 </head>
-<body>
+<body class="crt">
 
-    <h1>Telegram Validation</h1>
+<div class="top-shroud"></div>
+<div class="noise-bg"></div>
+<div class="hit-overlay" id="flash"></div>
+<div class="pixel-destruction" id="pixels"></div>
+<div id="decay-timer">5.00</div>
 
-    <button onclick="checkValidation()">
-        CHECK VALIDATION
-    </button>
+<svg id="settings-icon" viewBox="0 0 24 24" onclick="toggleSettings()">
+    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.81,11.69,4.81,12c0,0.31,0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.5c-1.93,0-3.5-1.57-3.5-3.5 s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.93,15.5,12,15.5z"/>
+</svg>
 
-    <div id="result"></div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-
-        tg.expand();
-        tg.ready();
-
-        async function checkValidation() {
-
-            const result = document.getElementById("result");
-
-            result.innerHTML = "Checking...";
-
-            try {
-
-                const initData = tg.initData;
-
-                const response = await fetch("https://server-ieki.onrender.com/validate", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        initData: initData
-                    })
-                });
-
-                const data = await response.json();
-
-                console.log(data);
-
-                if (data.valid) {
-
-                    result.innerHTML = `
-<div class="success">
-<h2>VALID ✅</h2>
-
-<p><b>Saved to Firebase:</b> YES</p>
-
-<p><b>User ID:</b> ${data.user.id}</p>
-<p><b>Username:</b> ${data.user.username}</p>
-<p><b>First Name:</b> ${data.user.first_name}</p>
-<p><b>Last Name:</b> ${data.user.last_name}</p>
-
-<p><b>initData:</b></p>
-${initData}
+<div id="settings-menu">
+    <h2 id="settings-title">SETTINGS</h2>
+    <button class="lang-btn" onclick="setLang('en')">ENGLISH</button>
+    <button class="lang-btn" onclick="setLang('ru')">РУССКИЙ</button>
+    <button id="close-btn" class="lang-btn" style="border-color: var(--accent-color); color: var(--accent-color);" onclick="toggleSettings()">CLOSE</button>
 </div>
-                    `;
 
-                } else {
-
-                    result.innerHTML = `
-<div class="error">
-<h2>INVALID ❌</h2>
-
-${JSON.stringify(data, null, 2)}
+<div id="rank-menu">
+    <h2 id="rank-title">TOP CHAOS</h2>
+    <div class="rank-list" id="rank-list">
+        <div class="rank-item">LOADING...</div>
+    </div>
+    <button class="lang-btn" style="border-color: var(--accent-color); color: var(--accent-color);" onclick="toggleRank()">CLOSE</button>
 </div>
-                    `;
-                }
 
-            } catch (e) {
-
-                result.innerHTML = `
-<div class="error">
-<h2>ERROR ❌</h2>
-
-${e.message}
+<div class="main-content" id="content">
+    <h1 id="title">SYSTEM DESTRUCTION</h1>
+    <div class="trash-btn-wrapper" id="btn-container">
+        <button id="btn">DO NOT TOUCH</button>
+    </div>
+    <div id="score-container">
+        <div id="score">CHAOS: 0</div>
+        <div id="combo">COMBO X1</div>
+    </div>
+    <div id="user-display" style="margin-top: 15px; font-family: var(--mono-font); color: var(--glitch-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7;">USER: UNKNOWN</div>
 </div>
-                `;
 
-                console.error(e);
-            }
+<nav class="nav-bar">
+    <div class="nav-item" id="nav-play" data-text="PLAY">PLAY</div>
+    <div class="nav-item" id="nav-quests" data-text="QUESTS">QUESTS</div>
+    <div class="nav-item" id="nav-shop" data-text="SHOP">SHOP</div>
+    <div class="nav-item" id="nav-rank" data-text="RANK">RANK</div>
+    <div class="nav-item" id="nav-ads" data-text="ADS">ADS</div>
+</nav>
+
+<script>
+    // ===== CONFIGURATION =====
+    // Change this to your server URL
+    const SERVER_URL = "https://server-ieki.onrender.com";
+
+    // Translations
+    const translations = {
+        en: {
+            title: "SYSTEM DESTRUCTION",
+            score: "CHAOS: ",
+            erasing: "ERASING",
+            trash: ["TRASH", "JUNK", "DEBRIS", "WASTE", "GARBAGE", "RUBBISH"],
+            triple: "TRIPLE CLICK",
+            settings: "SETTINGS",
+            close: "CLOSE",
+            topChaos: "TOP CHAOS",
+            play: "PLAY",
+            quests: "QUESTS",
+            shop: "SHOP",
+            rank: "RANK",
+            ads: "ADS"
+        },
+        ru: {
+            title: "РАЗРУШЕНИЕ СИСТЕМЫ",
+            score: "ХАОС: ",
+            erasing: "СТИРАНИЕ",
+            trash: ["МУСОР", "ХЛАМ", "ОБЛОМКИ", "ОТХОДЫ", "БАРАХЛО", "ТРЯПЬЕ"],
+            triple: "ТРОЙНОЙ КЛИК",
+            settings: "НАСТРОЙКИ",
+            close: "ЗАКРЫТЬ",
+            topChaos: "ТОП ХАОСА",
+            play: "ИГРАТЬ",
+            quests: "КВЕСТЫ",
+            shop: "МАГАЗИН",
+            rank: "РЕЙТИНГ",
+            ads: "РЕКЛАМА"
         }
-    </script>
+    };
+
+    // ===== STATE VARIABLES =====
+    let score = 0;
+    let combo = 0;
+    let currentLang = "en";
+    let isPunishing = false;
+    let isGlitchActive = false;
+    let isTripleActive = false;
+    let isDecayActive = false;
+    let buttonsToClick = 0;
+    let decayTimeLeft = 5;
+    let decayInterval = null;
+    let comboTimer = null;
+    let glitchCycleTimeout = null;
+
+    // ===== DOM ELEMENTS =====
+    const btn = document.getElementById("btn");
+    const scoreEl = document.getElementById("score");
+    const comboEl = document.getElementById("combo");
+    const titleEl = document.getElementById("title");
+    const flash = document.getElementById("flash");
+    const pixelOverlay = document.getElementById("pixels");
+    const decayTimerEl = document.getElementById("decay-timer");
+    const settingsMenu = document.getElementById("settings-menu");
+    const rankMenu = document.getElementById("rank-menu");
+    const rankList = document.getElementById("rank-list");
+    const userDisplay = document.getElementById("user-display");
+
+    // ===== TELEGRAM SETUP =====
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+
+    // ===== INITIALIZATION =====
+    async function initializeApp() {
+        try {
+            // Validate user with server
+            const initData = tg.initData;
+            const response = await fetch(`${SERVER_URL}/validate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ initData: initData })
+            });
+
+            const data = await response.json();
+
+            if (data.valid && data.user) {
+                // Store user info in localStorage
+                localStorage.setItem("user_id", data.user.id);
+                localStorage.setItem("username", data.user.username);
+                localStorage.setItem("first_name", data.user.first_name);
+                localStorage.setItem("last_name", data.user.last_name);
+                
+                updateUserDisplay();
+                loadUserScore();
+            } else {
+                tg.showAlert("Validation failed!");
+            }
+        } catch (e) {
+            console.error("Initialization error:", e);
+            tg.showAlert("Error: " + e.message);
+        }
+    }
+
+    function updateUserDisplay() {
+        const username = localStorage.getItem("username") || "UNKNOWN";
+        const firstName = localStorage.getItem("first_name") || "";
+        const displayName = username || firstName || "UNKNOWN";
+        userDisplay.innerText = `USER: ${displayName.toUpperCase()}`;
+    }
+
+    async function loadUserScore() {
+        try {
+            const userId = localStorage.getItem("user_id");
+            // Load score from server if available
+            // For now, we'll start with 0
+            score = 0;
+            updateUI();
+        } catch (e) {
+            console.error("Error loading score:", e);
+        }
+    }
+
+    // ===== SAVE SCORE TO SERVER =====
+    async function saveToServer() {
+        try {
+            const userId = localStorage.getItem("user_id");
+            const username = localStorage.getItem("username") || "";
+            const firstName = localStorage.getItem("first_name") || "";
+            const lastName = localStorage.getItem("last_name") || "";
+
+            if (!userId) return;
+
+            await fetch(`${SERVER_URL}/save_score`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: userId,
+                    score: score,
+                    username: username,
+                    first_name: firstName,
+                    last_name: lastName
+                })
+            });
+        } catch (e) {
+            console.error("Error saving score:", e);
+        }
+    }
+
+    // ===== LEADERBOARD =====
+    async function loadLeaderboard() {
+        try {
+            const response = await fetch(`${SERVER_URL}/leaderboard`);
+            const data = await response.json();
+
+            if (data.ok && data.leaderboard) {
+                const currentUserId = localStorage.getItem("user_id");
+                rankList.innerHTML = "";
+
+                data.leaderboard.forEach((user, index) => {
+                    const rankItem = document.createElement("div");
+                    rankItem.className = "rank-item";
+                    if (user.id === currentUserId) {
+                        rankItem.classList.add("current-user");
+                    }
+
+                    const displayName = user.username || user.first_name || "Unknown";
+                    rankItem.innerHTML = `
+                        <span class="rank-pos">#${index + 1}</span>
+                        <span class="rank-name">${displayName}</span>
+                        <span class="rank-score">${user.score}</span>
+                    `;
+                    rankList.appendChild(rankItem);
+                });
+            }
+        } catch (e) {
+            console.error("Error loading leaderboard:", e);
+            rankList.innerHTML = `<div class="rank-item">ERROR LOADING</div>`;
+        }
+    }
+
+    // ===== UI FUNCTIONS =====
+    function updateUI() {
+        scoreEl.innerText = translations[currentLang].score + score;
+    }
+
+    function setLang(lang) {
+        currentLang = lang;
+        titleEl.innerText = translations[currentLang].title;
+        updateUI();
+    }
+
+    function toggleSettings() {
+        settingsMenu.classList.toggle("open");
+    }
+
+    function toggleRank() {
+        rankMenu.classList.toggle("open");
+        if (rankMenu.classList.contains("open")) {
+            loadLeaderboard();
+        }
+    }
+
+    // ===== GLITCH MECHANICS =====
+    function spawnDataBlock(color = null) {
+        const block = document.createElement("div");
+        block.className = "data-block";
+        if (color) block.style.background = color;
+        block.style.left = Math.random() * window.innerWidth + "px";
+        block.style.top = Math.random() * window.innerHeight + "px";
+        document.body.appendChild(block);
+        setTimeout(() => block.remove(), 200);
+    }
+
+    function startGlitchCycle() {
+        const glitchChance = Math.random();
+        let delay = 3000 + Math.random() * 4000;
+
+        if (glitchChance < 0.3) {
+            delay = 2000 + Math.random() * 2000;
+            glitchCycleTimeout = setTimeout(() => {
+                isGlitchActive = true;
+                btn.classList.add("glitch-active");
+                updateUI();
+            }, delay);
+        } else if (glitchChance < 0.6) {
+            delay = 2500 + Math.random() * 3000;
+            glitchCycleTimeout = setTimeout(() => {
+                startTripleEvent();
+            }, delay);
+        } else {
+            delay = 3000 + Math.random() * 4000;
+            glitchCycleTimeout = setTimeout(() => {
+                startDecayEvent();
+            }, delay);
+        }
+    }
+
+    function startTripleEvent() {
+        isTripleActive = true;
+        buttonsToClick = 3;
+        updateUI();
+
+        for (let i = 0; i < 2; i++) {
+            const extra = document.createElement("button");
+            extra.className = "extra-btn";
+            extra.innerText = translations[currentLang].triple;
+            
+            const x = Math.random() * (window.innerWidth - 150);
+            const y = Math.random() * (window.innerHeight - 150);
+            extra.style.left = x + "px";
+            extra.style.top = y + "px";
+            
+            extra.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                extra.remove();
+                buttonsToClick--;
+                checkTripleComplete();
+            });
+            document.body.appendChild(extra);
+        }
+    }
+
+    function checkTripleComplete() {
+        if (buttonsToClick === 0) {
+            isTripleActive = false;
+            updateUI();
+            startGlitchCycle();
+        }
+    }
+
+    function startDecayEvent() {
+        isDecayActive = true;
+        decayTimeLeft = 5.0;
+        pixelOverlay.style.display = "block";
+        decayTimerEl.style.display = "block";
+        updateUI();
+
+        decayInterval = setInterval(() => {
+            decayTimeLeft -= 0.05;
+            decayTimerEl.innerText = decayTimeLeft.toFixed(2);
+            pixelOverlay.style.opacity = (1 - decayTimeLeft / 5) * 0.8 + 0.2;
+            
+            if (decayTimeLeft <= 0) {
+                clearInterval(decayInterval);
+                failDecay();
+            }
+        }, 50);
+    }
+
+    function failDecay() {
+        isDecayActive = false;
+        decayTimerEl.style.display = "none";
+        pixelOverlay.style.display = "none";
+        
+        const penalty = Math.floor(score * 0.3);
+        score -= penalty;
+        if (score < 0) score = 0;
+        
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+        tg.showAlert("SYSTEM CORRUPTED! -30% CHAOS");
+        
+        saveToServer();
+        updateUI();
+        startGlitchCycle();
+    }
+
+    function fixDecay() {
+        clearInterval(decayInterval);
+        isDecayActive = false;
+        decayTimerEl.style.display = "none";
+        pixelOverlay.style.display = "none";
+        
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        
+        score += 50;
+        saveToServer();
+        updateUI();
+        startGlitchCycle();
+    }
+
+    function triggerPunishment() {
+        if (isPunishing) return;
+        isPunishing = true;
+        isGlitchActive = false;
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+
+        scoreEl.classList.add("erasing");
+        let tempScore = score;
+        const eraseInterval = setInterval(() => {
+            tempScore = Math.floor(tempScore * 0.7);
+            if (tempScore <= 0) {
+                tempScore = 0;
+                clearInterval(eraseInterval);
+            }
+            scoreEl.innerText = translations[currentLang].erasing + " " + generateGlitchString(tempScore);
+        }, 50);
+
+        function generateGlitchString(val) {
+            const chars = "!@#$%^&*()_+-=[]{}|;':,.<>?/";
+            let s = val.toString();
+            return s.split('').map(c => Math.random() > 0.5 ? chars[Math.floor(Math.random() * chars.length)] : c).join('');
+        }
+
+        document.body.classList.add("punishment-active");
+        pixelOverlay.style.display = "block";
+        pixelOverlay.style.opacity = "0.5";
+        
+        const chaosInterval = setInterval(() => {
+            spawnDataBlock("#ff0000");
+            spawnDataBlock("#ffffff");
+            spawnDataBlock("#0000ff");
+        }, 30);
+
+        setTimeout(() => {
+            clearInterval(chaosInterval);
+            isPunishing = false;
+            score = 0;
+            combo = 0;
+            saveToServer();
+            document.body.classList.remove("punishment-active");
+            scoreEl.classList.remove("erasing");
+            pixelOverlay.style.display = "none";
+            updateUI();
+            startGlitchCycle();
+        }, 2000);
+    }
+
+    // ===== MAIN CLICK HANDLER =====
+    const triggerAction = (e) => {
+        if (e && e.cancelable) e.preventDefault();
+        if (isPunishing) return;
+        
+        if (isDecayActive) {
+            fixDecay();
+            return;
+        }
+
+        if (isTripleActive) {
+            buttonsToClick--;
+            checkTripleComplete();
+            score += 1;
+            updateUI();
+            return;
+        }
+
+        if (isGlitchActive) {
+            triggerPunishment();
+            return;
+        }
+
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+        combo++;
+        score += combo;
+        saveToServer();
+        scoreEl.innerText = translations[currentLang].score + score;
+        
+        comboEl.style.opacity = "1";
+        comboEl.innerText = "COMBO X" + combo;
+        const scale = Math.min(1 + combo/20, 1.8);
+        comboEl.style.transform = `scale(${scale})`;
+        
+        clearTimeout(comboTimer);
+        comboTimer = setTimeout(() => { combo = 0; comboEl.style.opacity = "0"; }, 800);
+
+        flash.classList.remove("flash");
+        void flash.offsetWidth;
+        flash.classList.add("flash");
+        for(let i=0; i<5; i++) spawnDataBlock();
+
+        if(Math.random() > 0.7) {
+            const trash = translations[currentLang].trash;
+            titleEl.innerText = trash[Math.floor(Math.random() * trash.length)];
+            setTimeout(() => {
+                if (!isGlitchActive && !isPunishing && !isDecayActive && !isTripleActive) titleEl.innerText = translations[currentLang].title;
+            }, 350);
+        }
+    };
+
+    btn.addEventListener('pointerdown', triggerAction);
+
+    // ===== NAVIGATION =====
+    const navItems = {
+        'nav-play': () => { 
+            rankMenu.classList.remove("open");
+            settingsMenu.classList.remove("open");
+        },
+        'nav-quests': () => { tg.showAlert('Coming Soon...'); },
+        'nav-shop': () => { tg.showAlert('Coming Soon...'); },
+        'nav-rank': () => { toggleRank(); },
+        'nav-ads': () => {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            AdController.show().then((result) => {
+                score += 1000;
+                saveToServer();
+                updateUI();
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert('REWARD: +1000 CHAOS');
+            }).catch((result) => {
+                console.error('Ads error:', result);
+                tg.showAlert('Ads error: ' + (result.error || 'Unknown error'));
+            });
+        }
+    };
+
+    Object.keys(navItems).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('pointerdown', (e) => {
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                navItems[id]();
+            });
+        }
+    });
+    
+    // ===== START APP =====
+    initializeApp();
+    updateUI();
+    startGlitchCycle();
+</script>
 
 </body>
 </html>
