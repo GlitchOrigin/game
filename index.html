@@ -415,7 +415,6 @@
                 userId = data.user.id;
                 userDisplay.innerText = `USER: ${data.user.username || data.user.first_name || userId}`;
                 
-                // Use score returned from server (which now fetches it from DB)
                 score = data.user.score || 0;
                 updateUI();
                 
@@ -461,7 +460,6 @@
     function saveToFirebase() {
         if (userId === "guest") return;
         const userRef = ref(db, `users/${userId}`);
-        // Use update to avoid overwriting other fields
         set(userRef, {
             id: userId,
             score: score,
@@ -509,6 +507,11 @@
         if (isPunishing) return;
         isPunishing = true;
         isGlitchActive = false;
+        
+        // INSTANTLY RESET BUTTON STATE
+        btn.classList.remove("glitch-active");
+        btn.innerText = translations[currentLang].btn;
+
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
 
         scoreEl.classList.add("erasing");
